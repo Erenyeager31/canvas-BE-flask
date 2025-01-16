@@ -1,6 +1,6 @@
 from flask import render_template, Blueprint, jsonify, request
 from app.controllers.scriptController import genNewScript,genImgPrompts
-from app.controllers.imageGenController import generate_images
+from app.controllers.imageGenController import genImagefn
 
 main_bp = Blueprint('main', __name__)
 

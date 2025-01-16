@@ -1,5 +1,5 @@
 from optimum.intel.openvino.modeling_diffusion import OVStableDiffusionXLPipeline
-from app.utils import upload_images_to_cloudinary
+from app.utils.cloudinaryUploader import upload_images_to_cloudinary
 
 class ImageGenerator:
     def __init__(self):
