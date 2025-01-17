@@ -14,7 +14,10 @@ def retriveContext(topic:str)->list:
     context = ContextModel.retrieve_context(
                 topic
             )
+
+    # print("Generated Context:",context[0]['text'])
+    context = '.'.join(context[0]['text'].split(".")[:30])
     
     return {
-        topic,context
+        context
     }

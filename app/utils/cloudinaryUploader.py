@@ -39,8 +39,8 @@ def upload_images_to_cloudinary(image_paths: list) -> list:
 
     return uploaded_urls
 
-# Example usage
-image_paths = ["../data/images/mgboss.jpg"]
-uploaded_urls = upload_images_to_cloudinary(image_paths)
-for url in uploaded_urls:
-    print(url)
+# # Example usage
+# image_paths = ["../data/images/mgboss.jpg"]
+# uploaded_urls = upload_images_to_cloudinary(image_paths)
+# for url in uploaded_urls:
+#     print(url)

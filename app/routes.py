@@ -1,6 +1,7 @@
 from flask import render_template, Blueprint, jsonify, request
 from app.controllers.scriptController import genNewScript,genImgPrompts
 from app.controllers.imageGenController import genImagefn
+import re
 
 main_bp = Blueprint('main', __name__)
 
@@ -16,7 +17,10 @@ def index():
 def newScriptRoute():
     bodyJson = request.get_json()
     response = genNewScript(bodyJson)
-    return response
+    generated_text = response['generated_text']
+    match = re.search(r'\{.*?\}', generated_text)
+    return generated_text
+
 
 @main_bp.route('/api/prompts',methods=['POST'])
 def newImgPrompts():

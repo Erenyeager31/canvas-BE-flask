@@ -1,4 +1,5 @@
 from flask import current_app
+from app.controllers.vectorDBcontroller import retriveContext
 
 # Simplified style guides
 STYLE_GUIDES = {
@@ -11,17 +12,19 @@ STYLE_GUIDES = {
 def genNewScript(body:dict)->dict:
     topic = body['topic']
     ScriptGenModel = current_app.config['ScriptGenModel']
+    
+    context = retriveContext(topic)
+    
+    # print("Topic:",topic,"Context:",context)
 
     result = ScriptGenModel.generate_with_custom_instructions(
-                context="",
+                context=context,
                 query=topic,
                 # words_per_sentence=words_per_sentence
             )
     
-    return {
-        'topic':topic,
-        'script':result
-    }
+    print(result)
+    return result
 
 def genImgPrompts(story:str)->list:
     ScriptGenModel = current_app.config['ScriptGenModel']

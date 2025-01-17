@@ -54,88 +54,222 @@ class Phi2Generator:
         similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
         return similarity
 
+    # def generate_with_custom_instructions(
+    #     self,
+    #     context: str,
+    #     query: str,
+    #     words_per_sentence: int = 15,
+    #     temperature: float = 0.9
+    # ) -> Dict[str, Union[str, float]]:
+    #     try:
+    #         # Set absolute minimum and maximum token limits
+    #         MIN_CONTEXT_LENGTH = 50
+    #         MAX_NEW_TOKENS = 500
+    #         TOTAL_MAX_LENGTH = 2048  # Typical maximum for Phi-2
+            
+    #         # Ensure inputs are strings
+    #         context = str(context) if context is not None else ""
+    #         query = str(query) if query is not None else ""
+            
+    #         # Prepare the base prompt template
+    #         sentence_instruction = f"\nImportant: Use approximately {words_per_sentence} words per sentence." if words_per_sentence else ""
+    #         base_prompt = "Based on this historical context:\n{context}\n\nWrite a historical narrative that {query}{instruction}\n\nYour narrative should maintain consistent sentence lengths while being natural and engaging.\n\nNarrative:"
+            
+    #         # First, encode the context separately to get its token count
+    #         context_tokens = self.tokenizer.encode(
+    #             context,
+    #             add_special_tokens=False,  # Don't add special tokens yet
+    #             truncation=True,
+    #             max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
+    #         )
+            
+    #         # Truncate context if needed
+    #         if len(context_tokens) > (TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH):
+    #             context_tokens = context_tokens[:TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH]
+            
+    #         # Decode truncated context back to string
+    #         truncated_context = self.tokenizer.decode(context_tokens, skip_special_tokens=True)
+            
+    #         # Format the full prompt with the truncated context
+    #         full_prompt = base_prompt.format(
+    #             context=truncated_context,
+    #             query=query,
+    #             instruction=sentence_instruction
+    #         )
+            
+    #         # Encode the full prompt properly
+    #         encoded_input = self.tokenizer(
+    #             full_prompt,
+    #             return_tensors="pt",
+    #             padding=True,
+    #             truncation=True,
+    #             max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
+    #         )
+            
+    #         # Move to device
+    #         input_ids = encoded_input["input_ids"].to(self.device)
+    #         attention_mask = encoded_input["attention_mask"].to(self.device)
+            
+    #         # Generate text
+    #         outputs = self.model.generate(
+    #             input_ids=input_ids,
+    #             attention_mask=attention_mask,
+    #             max_new_tokens=MAX_NEW_TOKENS,
+    #             min_length=50,
+    #             temperature=temperature,
+    #             top_p=0.92,
+    #             top_k=40,
+    #             repetition_penalty=1.1,
+    #             do_sample=True,
+    #             pad_token_id=self.tokenizer.pad_token_id,
+    #             eos_token_id=self.tokenizer.eos_token_id
+    #         )
+            
+    #         # Process the generated text
+    #         story = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+    #         # Clean up the output
+    #         if "Narrative:" in story:
+    #             story = story.split("Narrative:")[-1].strip()
+    #         story = story.replace("Context:", "").replace("Query:", "").strip()
+            
+    #         # Calculate metrics
+    #         relevance_score = self.get_context_relevance(query, context)
+    #         sentences = [s.strip() for s in story.split('.') if s.strip()]
+    #         avg_words = sum(len(s.split()) for s in sentences) / len(sentences) if sentences else 0
+            
+    #         return {
+    #             'generated_text': story,
+    #             'relevance_score': relevance_score,
+    #             'avg_words_per_sentence': avg_words,
+    #             'num_sentences': len(sentences),
+    #             'total_words': sum(len(s.split()) for s in sentences)
+    #         }
+            
+    #     except Exception as e:
+    #         logger.error(f"Error in story generation: {str(e)}")
+    #         return {
+    #             'generated_text': "Error occurred during text generation.",
+    #             'error': str(e)
+    #         }
+    
     def generate_with_custom_instructions(
         self,
         context: str,
         query: str,
-        words_per_sentence: int = None,
+        words_per_sentence: int = 15,
         temperature: float = 0.9
     ) -> Dict[str, Union[str, float]]:
-        """
-        Generate text with a specified number of words per sentence.
-        
-        Args:
-            context (str): The background context or information
-            query (str): The specific query or task
-            words_per_sentence (int): Target average words per sentence
-            temperature (float): Sampling temperature
-            
-        Returns:
-            Dict containing generated text and metadata
-        """
         try:
-            # Modify prompt to include sentence length instruction if specified
-            sentence_instruction = ""
-            if words_per_sentence:
-                sentence_instruction = f"\nImportant: Use approximately {words_per_sentence} words per sentence."
-
-            prompt = f"""Based on this historical context:
+            # Set absolute minimum and maximum token limits
+            MIN_CONTEXT_LENGTH = 50
+            MAX_NEW_TOKENS = 200
+            TOTAL_MAX_LENGTH = 2048
+            TARGET_WORDS = 125
+            
+            # Ensure inputs are strings
+            context = str(context) if context is not None else ""
+            query = str(query) if query is not None else ""
+            
+            # Prepare the base prompt template with emphasis on narrative flow
+            sentence_instruction = f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence and keep the total response between 100-150 words." if words_per_sentence else "\nImportant: Write in a clear narrative style and keep the total response between 100-150 words."
+            base_prompt = """Based on this historical context:
 {context}
 
-Write a historical narrative that {query}{sentence_instruction}
+Write an engaging historical narrative that {query}{instruction}
 
-Your narrative should maintain consistent sentence lengths while being natural and engaging.
+Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
 
 Narrative:"""
-
-            tokenizer_output = self.tokenizer(
-                prompt,
+            
+            # Rest of the function remains the same...
+            context_tokens = self.tokenizer.encode(
+                context,
+                add_special_tokens=False,
+                truncation=True,
+                max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
+            )
+            
+            if len(context_tokens) > (TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH):
+                context_tokens = context_tokens[:TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH]
+            
+            truncated_context = self.tokenizer.decode(context_tokens, skip_special_tokens=True)
+            
+            full_prompt = base_prompt.format(
+                context=truncated_context,
+                query=query,
+                instruction=sentence_instruction
+            )
+            
+            encoded_input = self.tokenizer(
+                full_prompt,
+                return_tensors="pt",
                 padding=True,
                 truncation=True,
-                return_tensors="pt"
+                max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
             )
-
-            input_ids = tokenizer_output["input_ids"].to(self.device)
-            attention_mask = tokenizer_output["attention_mask"].to(self.device)
-
+            
+            input_ids = encoded_input["input_ids"].to(self.device)
+            attention_mask = encoded_input["attention_mask"].to(self.device)
+            
+            target_tokens = int(TARGET_WORDS * 1.3)
+            
             outputs = self.model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                max_length=400,
-                min_length=100,
+                max_new_tokens=target_tokens + 50,
+                min_length=int(target_tokens * 0.8),
+                max_length=int(target_tokens * 1.2),
                 temperature=temperature,
                 top_p=0.92,
                 top_k=40,
                 repetition_penalty=1.1,
                 do_sample=True,
                 pad_token_id=self.tokenizer.pad_token_id,
-                eos_token_id=self.tokenizer.eos_token_id
+                eos_token_id=self.tokenizer.eos_token_id,
+                length_penalty=1.0
             )
-
+            
             story = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            story = story.split("Narrative:")[-1].strip()
-            story = story.replace("Context:", "").replace("Query:", "")
-
-            # Calculate metrics
+            
+            if "Narrative:" in story:
+                story = story.split("Narrative:")[-1].strip()
+            story = story.replace("Context:", "").replace("Query:", "").strip()
+            
             relevance_score = self.get_context_relevance(query, context)
             sentences = [s.strip() for s in story.split('.') if s.strip()]
-            avg_words = sum(len(s.split()) for s in sentences) / len(sentences)
-
+            avg_words = sum(len(s.split()) for s in sentences) / len(sentences) if sentences else 0
+            total_words = sum(len(s.split()) for s in sentences)
+            
+            if total_words > 150:
+                cumulative_words = 0
+                truncated_sentences = []
+                for sentence in sentences:
+                    sentence_words = len(sentence.split())
+                    if cumulative_words + sentence_words <= 150:
+                        truncated_sentences.append(sentence)
+                        cumulative_words += sentence_words
+                    else:
+                        break
+                story = '. '.join(truncated_sentences) + '.'
+                sentences = truncated_sentences
+                total_words = cumulative_words
+            
             return {
                 'generated_text': story,
-                'relevance_score': relevance_score,
-                'avg_words_per_sentence': avg_words,
-                'num_sentences': len(sentences),
-                'total_words': sum(len(s.split()) for s in sentences)
+                # 'relevance_score': relevance_score,
+                # 'avg_words_per_sentence': avg_words,
+                # 'num_sentences': len(sentences),
+                # 'total_words': total_words
             }
-
+            
         except Exception as e:
             logger.error(f"Error in story generation: {str(e)}")
             return {
                 'generated_text': "Error occurred during text generation.",
                 'error': str(e)
             }
-
+   
     def generate_concise_image_prompts(
         # model,
         # tokenizer,

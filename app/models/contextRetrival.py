@@ -54,12 +54,12 @@ class ContextRetriever:
             print(f"Error during context retrieval: {str(e)}")
             return []
     
-# Example usage
-# index_name = "<your_index_name>"
-retriever = ContextRetriever()
-topic = "Rainbow table attack"
-context = retriever.retrieve_context(topic, top_k=5)
-for i, result in enumerate(context, 1):
-    print(f"\nResult {i} (Score: {result['score']:.3f})")
-    print(f"Source: {result['source']}")
-    print(f"Text: {result['text'][:200]}...")
+# # Example usage
+# # index_name = "<your_index_name>"
+# retriever = ContextRetriever()
+# topic = "Rainbow table attack"
+# context = retriever.retrieve_context(topic, top_k=5)
+# for i, result in enumerate(context, 1):
+#     print(f"\nResult {i} (Score: {result['score']:.3f})")
+#     print(f"Source: {result['source']}")
+#     print(f"Text: {result['text'][:200]}...")
