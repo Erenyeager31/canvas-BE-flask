@@ -9,9 +9,10 @@ from .models.contextRetrival import ContextRetriever
 def create_app():
     app = Flask(__name__)
 
-    app.config['ScriptGenModel'] = Phi2Generator()
-    app.config['ImageGenModel'] = ImageGenerator()
+    # app.config['ScriptGenModel'] = Phi2Generator()
+    # app.config['ImageGenModel'] = ImageGenerator()
     app.config['contextModel'] = ContextRetriever()
+    app.config['UPLOAD_FOLDER'] = "uploads"
 
     app.register_blueprint(main_bp)
     return app

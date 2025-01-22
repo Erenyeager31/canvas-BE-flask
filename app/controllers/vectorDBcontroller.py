@@ -1,4 +1,7 @@
 from flask import current_app
+from typing import List,Dict,Union
+from werkzeug.datastructures import FileStorage
+import io
 
 # Simplified style guides
 STYLE_GUIDES = {
@@ -21,3 +24,8 @@ def retriveContext(topic:str)->list:
     return {
         context
     }
+
+def uploadDocument(files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
+    ContextModel = current_app.config['contextModel']
+    status = ContextModel.upload_context(files, filenames)
+    return status
