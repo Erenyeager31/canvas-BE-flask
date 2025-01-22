@@ -112,59 +112,69 @@ class ContextRetriever:
         
         raise ValueError("Unable to decode file content with supported encodings")
 
-    def upload_context(self, files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
-        """
-        Process uploaded files, create chunks, and upload to Pinecone.
-        
-        Args:
-            files: List of file objects (either FileStorage or BytesIO)
-            filenames: List of filenames corresponding to the files
-        """
+    # def upload_context(self, files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
+    def upload_context(self):
         try:
+            import textract  # Importing textract for extracting text from various file types
+
             total_chunks = 0
-            batch_size = 100  # Number of vectors to upload at once
+            chunk_names = []  # List to store the names of the chunks
+            batch_size = 100
             vectors_batch = []
-            
-            for file, filename in zip(files, filenames):
-                # Process file content
-                text_content = self._process_file(file)
-                
-                # Create chunks from the text
-                chunks = self._create_chunks(text_content)
-                
-                # Generate embeddings for chunks
-                chunk_embeddings = self.model.encode(chunks)
-                
-                # Prepare vectors for batch upload
-                for i, (chunk, embedding) in enumerate(zip(chunks, chunk_embeddings)):
-                    vector_id = f"{filename}_chunk_{i}"
-                    vectors_batch.append({
-                        'id': vector_id,
-                        'values': embedding.tolist(),
-                        'metadata': {
-                            'text': chunk,
-                            'filename': filename,
-                            'chunk_index': i
-                        }
-                    })
-                    
-                    # Upload batch if it reaches the batch size
-                    if len(vectors_batch) >= batch_size:
-                        self.index.upsert(vectors=vectors_batch)
-                        total_chunks += len(vectors_batch)
-                        vectors_batch = []
-            
-            # Upload any remaining vectors
+            upload_dir = "app/data/upload"
+
+            files = [f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))]
+
+            for filename in files:
+                filepath = os.path.join(upload_dir, filename)
+                clean_filename = os.path.splitext(filename)[0].replace('~$', '')
+
+                try:
+                    # Extract text based on file type
+                    if filename.lower().endswith('.pdf') or filename.lower().endswith('.docx'):
+                        text_content = textract.process(filepath).decode('utf-8', errors='replace')
+                    else:
+                        with open(filepath, 'r', encoding='utf-8', errors='replace') as file:
+                            text_content = file.read()
+
+                    chunks = self._create_chunks(text_content)
+                    chunk_embeddings = self.model.encode(chunks)
+
+                    for i, (chunk, embedding) in enumerate(zip(chunks, chunk_embeddings)):
+                        vector_id = f"{clean_filename}_{i}"
+                        chunk_name = f"{clean_filename}_chunk_{i}"
+                        chunk_names.append(chunk_name)
+
+                        vectors_batch.append({
+                            'id': vector_id,
+                            'values': embedding.tolist(),
+                            'metadata': {
+                                'text': chunk,
+                                'filename': clean_filename,
+                                'chunk_index': i
+                            }
+                        })
+
+                        if len(vectors_batch) >= batch_size:
+                            self.index.upsert(vectors=vectors_batch)
+                            total_chunks += len(vectors_batch)
+                            vectors_batch = []
+
+                except Exception as e:
+                    print(f"Error processing {filename}: {str(e)}")
+                    continue
+
             if vectors_batch:
                 self.index.upsert(vectors=vectors_batch)
                 total_chunks += len(vectors_batch)
-            
-            return{
+
+            return {
                 'status': 'success',
-                # 'total_chunks': total,
+                'total_chunks': total_chunks,
+                'chunk_names': chunk_names,  # Return the names of the chunks
                 'message': f"Successfully uploaded {total_chunks} chunks to the index."
             }
-            
+
         except Exception as e:
             print(f"Error during context upload: {str(e)}")
             raise

@@ -25,7 +25,8 @@ def retriveContext(topic:str)->list:
         context
     }
 
-def uploadDocument(files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
+# def uploadDocument(files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
+def uploadDocument():
     ContextModel = current_app.config['contextModel']
-    status = ContextModel.upload_context(files, filenames)
+    status = ContextModel.upload_context()
     return status

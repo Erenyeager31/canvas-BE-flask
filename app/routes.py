@@ -39,28 +39,26 @@ def genImage():
     response = genImagefn(prompts=bodyJson['prompts'])
     return response
 
-@main_bp.route('/api/upload',methods=['POST'])
+@main_bp.route('/api/upload', methods=['GET'])
 def upload():
-    # List to store file data and filenames
-    uploaded_files = []
-    filenames = []
+    # upload_dir = 'app/data/upload'
 
-    # Retrieve multiple files from the request
-    if 'files' not in request.files:
-        return {"error": "No files part in the request"}, 400
+    # if not os.path.exists(upload_dir):
+    #     return {"error": "Upload directory does not exist"}, 400
+    
+    # uploaded_files = []
+    # filenames = []
 
-    files = request.files.getlist('files')  # Get all files as a list
+    # files = [f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))]
 
-    for file in files:
-        if file.filename != '':
-            # Save file to a directory (e.g., 'uploads/')
-            file_path = f"uploads/{file.filename}"
-            file.save(file_path)
+    # if not files:
+    #     return {"error": "No files found in the upload directory"}, 400
 
-            # Append file path and filename to lists
-            uploaded_files.append(file_path)
-            filenames.append(file.filename)
+    # for file in files:
+    #     file_path = os.path.join(upload_dir, file)
+    #     uploaded_files.append(file_path)
+    #     filenames.append(file)
 
-    # Process the files and filenames (if needed)
-    response = uploadDocument(uploaded_files, filenames)
+    # response = uploadDocument(uploaded_files, filenames)
+    response = uploadDocument()
     return response
