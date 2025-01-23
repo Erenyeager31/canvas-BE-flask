@@ -115,8 +115,6 @@ class ContextRetriever:
     # def upload_context(self, files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
     def upload_context(self):
         try:
-            import textract  # Importing textract for extracting text from various file types
-
             total_chunks = 0
             chunk_names = []  # List to store the names of the chunks
             batch_size = 100
@@ -131,12 +129,20 @@ class ContextRetriever:
 
                 try:
                     # Extract text based on file type
-                    if filename.lower().endswith('.pdf') or filename.lower().endswith('.docx'):
-                        text_content = textract.process(filepath).decode('utf-8', errors='replace')
+                    text_content = ""
+                    if filename.lower().endswith('.pdf'):
+                        from PyPDF2 import PdfReader
+                        reader = PdfReader(filepath)
+                        text_content = "\n".join([page.extract_text() for page in reader.pages])
+                    elif filename.lower().endswith('.docx'):
+                        from docx import Document
+                        doc = Document(filepath)
+                        text_content = "\n".join([para.text for para in doc.paragraphs])
                     else:
                         with open(filepath, 'r', encoding='utf-8', errors='replace') as file:
                             text_content = file.read()
 
+                    # Process text content into chunks and embeddings
                     chunks = self._create_chunks(text_content)
                     chunk_embeddings = self.model.encode(chunks)
 

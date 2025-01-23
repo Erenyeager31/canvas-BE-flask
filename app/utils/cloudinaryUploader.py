@@ -39,8 +39,29 @@ def upload_images_to_cloudinary(image_paths: list) -> list:
 
     return uploaded_urls
 
-# # Example usage
-# image_paths = ["../data/images/mgboss.jpg"]
-# uploaded_urls = upload_images_to_cloudinary(image_paths)
-# for url in uploaded_urls:
-#     print(url)
+def upload_audio_to_cloudinary(audio_paths: list, upload_preset="canvas-upload") -> list:
+    """
+    Uploads a list of audio files to Cloudinary using a specified preset
+    and returns a list of uploaded URLs.
+
+    :param audio_paths: List of local audio file paths (e.g., MP3, WAV).
+    :param upload_preset: Cloudinary upload preset (default is 'audio-upload').
+    :return: List of URLs of the uploaded audio files.
+    """
+    uploaded_urls = []
+    for audio_path in audio_paths:
+        try:
+            # Upload the audio file to Cloudinary using the specified upload preset
+            response = cloudinary.uploader.upload(
+                audio_path,
+                upload_preset=upload_preset,
+                resource_type="auto"  # Automatically detects the file type (audio or video)
+            )
+
+            # Extract the secure URL from the response
+            uploaded_urls.append(response.get("secure_url"))
+            print(f"Uploaded {audio_path} successfully.")
+        except Exception as e:
+            print(f"Failed to upload {audio_path}: {e}")
+
+    return uploaded_urls
