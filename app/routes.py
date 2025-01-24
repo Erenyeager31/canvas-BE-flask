@@ -3,6 +3,7 @@ from app.controllers.scriptController import genNewScript,genImgPrompts
 from app.controllers.imageGenController import genImagefn
 from app.controllers.vectorDBcontroller import uploadDocument
 from app.controllers.voiceGenController import genAudioController
+from app.controllers.videoGenController import videoGenController
 import re
 import os
 
@@ -53,35 +54,25 @@ def genAudio():
 
 @main_bp.route('/api/upload', methods=['GET'])
 def upload():
-    # upload_dir = 'app/data/upload'
-
-    # if not os.path.exists(upload_dir):
-    #     return {"error": "Upload directory does not exist"}, 400
-    
-    # uploaded_files = []
-    # filenames = []
-
-    # files = [f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))]
-
-    # if not files:
-    #     return {"error": "No files found in the upload directory"}, 400
-
-    # for file in files:
-    #     file_path = os.path.join(upload_dir, file)
-    #     uploaded_files.append(file_path)
-    #     filenames.append(file)
-
-    # response = uploadDocument(uploaded_files, filenames)
     response = uploadDocument()
     return response
 
-import os
+# import os
 
-def demofn():
-    current_dir = os.getcwd()  # Gets the current working directory
-    file_path = os.path.join(current_dir, "app/data/upload/demo.wav")  # Constructs the path
+# def demofn():
+#     current_dir = os.getcwd()  # Gets the current working directory
+#     file_path = os.path.join(current_dir, "app/data/upload/demo.wav")  # Constructs the path
     
-    url = upload_audio_to_cloudinary([file_path])  # Use the dynamically constructed file path
-    print(url)
+#     url = upload_audio_to_cloudinary([file_path])  # Use the dynamically constructed file path
+#     print(url)
 
 # demofn()
+@main_bp.route('/api/genVideo', methods=['POST'])
+def genVideo():
+    bodyJson = request.get_json()
+    # post items : story, image_urls, audio_urls
+    story,image_urls,audio_urls = bodyJson['story'],bodyJson['image_urls'],bodyJson['audio_urls']
+    response = videoGenController(story,image_urls,audio_urls)
+    return {
+        "url":response
+        }

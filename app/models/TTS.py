@@ -1,8 +1,8 @@
 import os
 import requests
 from tempfile import NamedTemporaryFile
-import torch
-import torchaudio
+# import torch
+# import torchaudio
 from TTS.api import TTS
 from app.utils.cloudinaryUploader import upload_audio_to_cloudinary
 

@@ -65,3 +65,29 @@ def upload_audio_to_cloudinary(audio_paths: list, upload_preset="canvas-upload")
             print(f"Failed to upload {audio_path}: {e}")
 
     return uploaded_urls
+
+def upload_video_to_cloudinary(video_path: str, upload_preset="canvas-upload") -> str:
+    """
+    Uploads a video file to Cloudinary using a specified preset
+    and returns the uploaded video's URL.
+
+    :param video_path: Local video file path (e.g., MP4, AVI).
+    :param upload_preset: Cloudinary upload preset (default is 'canvas-upload').
+    :return: URL of the uploaded video.
+    """
+    try:
+        # Upload the video file to Cloudinary using the specified upload preset
+        response = cloudinary.uploader.upload(
+            video_path,
+            upload_preset=upload_preset,
+            resource_type="video"  # Explicitly specify the resource type as video
+        )
+
+        # Extract the secure URL from the response
+        uploaded_url = response.get("secure_url")
+        print(f"Uploaded {video_path} successfully.")
+        return uploaded_url
+
+    except Exception as e:
+        print(f"Failed to upload {video_path}: {e}")
+        return ""
