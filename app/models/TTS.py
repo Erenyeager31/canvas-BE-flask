@@ -17,7 +17,7 @@ class HuggingFaceTTS:
             f.write(response.content)
         return file_path
     
-    def synthesize_and_upload(self, texts, url=None, language="en"):
+    def synthesize_and_upload(self, texts:list, url, language="en"):
         audio_files = []
         
         # Download custom voice if URL provided

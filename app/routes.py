@@ -48,8 +48,8 @@ def genImage():
 @main_bp.route('/api/genAudio',methods=['POST'])
 def genAudio():
     bodyJson = request.get_json()
-    texts, url = bodyJson['texts'], bodyJson['url']
-    response = genAudioController(texts, url)
+    texts, url, lang = bodyJson['texts'], bodyJson['url'], bodyJson['lang']
+    response = genAudioController(texts, url, lang)
     return response
 
 @main_bp.route('/api/upload', methods=['GET'])
