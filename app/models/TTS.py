@@ -11,11 +11,15 @@ class HuggingFaceTTS:
         # Initialize TTS model without language parameter
         self.tts = TTS(model_name=model_name)
     
-    def download_audio(self, url, file_path="temp_voice_sample.wav"):
-        response = requests.get(url)
-        with open(file_path, "wb") as f:
-            f.write(response.content)
-        return file_path
+    def download_audio(self, url):
+        with NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                temp_file.write(response.content)
+                temp_file.flush()
+                return temp_file.name
+            else:
+                raise ValueError(f"Failed to download audio. Status code: {response.status_code}")
     
     def synthesize_and_upload(self, texts:list, url, language="en"):
         audio_files = []
