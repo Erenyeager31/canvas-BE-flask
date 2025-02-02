@@ -1,5 +1,6 @@
 from flask import current_app
-from app.controllers.vectorDBcontroller import retriveContext
+from app.controllers.vectorDBcontroller import retriveContext, retriveUserContextController
+from app.utils.cloudinaryDeleteFiles import delete_files_from_cloudinary
 
 # Simplified style guides
 STYLE_GUIDES = {
@@ -25,11 +26,21 @@ STYLE_GUIDES = {
     
 #     print(result)
 #     return result
-def genNewScript(body: dict) -> dict:
+def genNewScript(body: dict,userDocURL) -> dict:
     topic = body['topic']
+
     ScriptGenModel = current_app.config['ScriptGenModel']
     
-    context = retriveContext(topic)
+    # based on whether user has provided doc or not, fetch context
+    context = ""
+    if userDocURL:
+        context = retriveUserContextController(topic,userDocURL)
+    else:
+        context = retriveContext(topic)
+
+    print("Inside controller :",context)
+
+    response = delete_files_from_cloudinary([userDocURL])
     
     # Generate the result
     result = ScriptGenModel.generate_with_custom_instructions(

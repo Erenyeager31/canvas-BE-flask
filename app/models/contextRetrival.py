@@ -1,11 +1,18 @@
 import pinecone
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 from typing import List, Dict, Union
 import os
 from dotenv import load_dotenv
 import io
 from werkzeug.datastructures import FileStorage
 import re
+import requests
+import numpy as np
+import tempfile
+import PyPDF2
+import docx
+import numpy as np
+
 load_dotenv()
 
 class ContextRetriever:
@@ -13,6 +20,7 @@ class ContextRetriever:
         # Get API key from environment variables
         api_key = os.getenv('PINECONE_API_KEY')
         index_name = os.getenv('PINECONE_INDEX_NAME')
+        self.upload_dir = "app/data/upload"
         if not api_key:
             raise ValueError("PINECONE_API_KEY not found in environment variables.")
 
@@ -184,3 +192,73 @@ class ContextRetriever:
         except Exception as e:
             print(f"Error during context upload: {str(e)}")
             raise
+
+    def retrieve_User_Context(self, topic: str, userDocURL: str):
+        try:
+            # Determine file type
+            file_extension = ".pdf" if userDocURL.endswith(".pdf") else ".docx"
+            filename = os.path.basename(userDocURL).split("?")[0]  # Remove query params if any
+            filepath = os.path.join(self.upload_dir, filename)
+            
+            # Download and save file to upload directory
+            response = requests.get(userDocURL, timeout=10)
+            response.raise_for_status()
+            
+            with open(filepath, "wb") as file:
+                file.write(response.content)
+                
+            # Extract text based on file type
+            extracted_text = []
+            if file_extension == ".pdf":
+                with open(filepath, "rb") as pdf_file:
+                    pdf_reader = PyPDF2.PdfReader(pdf_file)
+                    for page in pdf_reader.pages:
+                        text = page.extract_text()
+                        if text:
+                            extracted_text.extend(text.split("\n"))
+            elif file_extension == ".docx":
+                doc = docx.Document(filepath)
+                extracted_text = [para.text for para in doc.paragraphs if para.text.strip()]
+            else:
+                raise ValueError("Unsupported file format. Only PDF and DOCX are supported.")
+            
+            # Remove empty lines
+            extracted_text = [line.strip() for line in extracted_text if line.strip()]
+            if not extracted_text:
+                raise ValueError("No text extracted from the document.")
+            
+            # Compute embeddings
+            topic_embedding = self.model.encode(topic, convert_to_tensor=True)
+            doc_embeddings = self.model.encode(extracted_text, convert_to_tensor=True)
+            
+            # Compute similarity scores
+            similarity_scores = util.pytorch_cos_sim(topic_embedding, doc_embeddings)[0]
+            
+            # Get top 5 matches
+            top_indices = np.argsort(similarity_scores.cpu().numpy())[::-1][:5]
+            top_sentences = [extracted_text[i] for i in top_indices]
+            
+            response = self.upload_context()
+            
+            # Delete the downloaded file after uploading
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+            return {
+                "status": "success",
+                "top_matches": top_sentences,
+                "file_saved_at": filepath
+            }
+            
+        except requests.exceptions.RequestException as e:
+            return {"status": "error", "message": f"Error downloading document: {e}"}
+        except (PyPDF2.errors.PdfReadError, docx.opc.exceptions.PackageNotFoundError) as e:
+            return {"status": "error", "message": f"Error reading document: {e}"}
+        except ValueError as e:
+            return {"status": "error", "message": f"Processing error: {e}"}
+        except Exception as e:
+            return {"status": "error", "message": f"Unexpected error: {e}"}
+        finally:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+

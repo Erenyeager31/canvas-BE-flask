@@ -13,6 +13,9 @@ from app.utils.cloudinaryUploader import upload_audio_to_cloudinary
 main_bp = Blueprint('main', __name__)
 CORS(main_bp)  # Allow CORS for all routes in this blueprint
 
+# command to run
+# flask --app run.py --debug run
+
 os.makedirs("uploads", exist_ok=True)
 
 @main_bp.route('/')
@@ -23,7 +26,8 @@ def index():
 @main_bp.route('/api/newScript', methods=['POST'])
 def newScriptRoute():
     bodyJson = request.get_json()
-    response = genNewScript(bodyJson)
+    userDocURL = bodyJson.get('userDocURL',None)
+    response = genNewScript(bodyJson,userDocURL)
     return response
 
 @main_bp.route('/api/prompts', methods=['POST'])

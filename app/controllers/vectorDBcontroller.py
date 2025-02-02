@@ -21,12 +21,21 @@ def retriveContext(topic:str)->list:
     # print("Generated Context:",context[0]['text'])
     context = '.'.join(context[0]['text'].split(".")[:30])
     
-    return {
-        context
-    }
+    return context
 
 # def uploadDocument(files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
 def uploadDocument():
     ContextModel = current_app.config['contextModel']
     status = ContextModel.upload_context()
     return status
+
+def retriveUserContextController(topic:str,userDocURL:str):
+    ContextModel = current_app.config['contextModel']
+
+    context = ContextModel.retrieve_User_Context(
+                topic,userDocURL
+            )
+
+    print(context)
+    
+    return context['top_matches'][0]
