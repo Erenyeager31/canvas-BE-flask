@@ -298,7 +298,7 @@ Narrative:"""
             image_prompts = []
 
             # Shorter system prompt encouraging brevity
-            system_prompt = f"""Convert the sentence into a brief, vivid image prompt.
+            system_prompt = f"""Convert the sentence into a brief, vivid image prompt. Focus on the subject present in the Sentence.
     Use max {max_words} words.
     Focus on key visual elements only.
     End with: {style_guide}"""
