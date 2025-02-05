@@ -27,7 +27,10 @@ class HuggingFaceTTS:
         # Download custom voice if URL provided
         reference_wav = self.download_audio(url) if url else None
         
+        print("Audio generation has started.")
+        print(len(texts))
         for i, text in enumerate(texts):
+            if(len(text) == 0): continue
             output_path = f"output_{i}.wav"
             
             # Generate speech with custom voice if available
@@ -36,7 +39,7 @@ class HuggingFaceTTS:
                     text=text, 
                     file_path=output_path, 
                     speaker_wav=reference_wav,
-                    language=language
+                    language=language,
                 )
             else:
                 self.tts.tts_to_file(
@@ -47,11 +50,15 @@ class HuggingFaceTTS:
             
             audio_files.append(output_path)
         
+        print("Audio generation has end.")
+
         # Upload to Cloudinary
         uploaded_urls = upload_audio_to_cloudinary(audio_files)
         
         # Clean temporary files
         for temp_audio_file in audio_files:
             os.remove(temp_audio_file)
+
+        print(uploaded_urls)
         
         return uploaded_urls

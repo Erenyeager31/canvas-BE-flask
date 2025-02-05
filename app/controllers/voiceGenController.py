@@ -12,6 +12,7 @@ def genAudioController(texts, url,lang="en"):
                 texts.split("."), url=url, language=lang
             )
 
+    print("Inside controller, process has finished")
     print(audioUrls)
 
     return audioUrls

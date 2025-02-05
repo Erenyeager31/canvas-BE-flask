@@ -6,7 +6,7 @@ from pydub.utils import mediainfo
 from app.utils.cloudinaryUploader import upload_video_to_cloudinary
 
 class VideoGenerator:
-    def __init__(self, story, image_urls, audio_urls, output_filename="output.mp4"):
+    def __init__(self, image_urls, audio_urls,story, output_filename="output.mp4"):
         # # Ensure data directories exist
         self.data_temp_dir = "data/temp"
         # self.data_temp_audio_dir = os.path.join(self.data_temp_dir, "audio")

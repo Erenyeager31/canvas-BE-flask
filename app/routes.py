@@ -47,6 +47,7 @@ def genImage():
 def genAudio():
     bodyJson = request.get_json()
     texts, url, lang = bodyJson['texts'], bodyJson['url'], bodyJson['lang']
+    # audio_lang = bodyJson.get('audio_lang','en')
     response = genAudioController(texts, url, lang)
     print(response)
     return jsonify(response)
@@ -60,5 +61,6 @@ def upload():
 def genVideo():
     bodyJson = request.get_json()
     story, image_urls, audio_urls = bodyJson['story'], bodyJson['image_urls'], bodyJson['audio_urls']
-    response = videoGenController(story, image_urls, audio_urls)
+    caption_lang = bodyJson.get('caption_lang','en')
+    response = videoGenController(story, image_urls, audio_urls,caption_lang)
     return jsonify({"url": response})

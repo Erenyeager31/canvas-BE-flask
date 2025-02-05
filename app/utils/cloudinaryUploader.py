@@ -63,6 +63,8 @@ def upload_audio_to_cloudinary(audio_paths: list, upload_preset="canvas-upload")
             print(f"Uploaded {audio_path} successfully.")
         except Exception as e:
             print(f"Failed to upload {audio_path}: {e}")
+    
+    print("Inside cloudinary, all files uploaded")
 
     return uploaded_urls
 

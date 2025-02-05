@@ -10,11 +10,10 @@ from .models.TTS import HuggingFaceTTS
 def create_app():
     app = Flask(__name__)
 
-    app.config['ScriptGenModel'] = Phi2Generator()
-    app.config['ImageGenModel'] = ImageGenerator()
-    app.config['contextModel'] = ContextRetriever()
+    # app.config['ScriptGenModel'] = Phi2Generator()
+    # app.config['ImageGenModel'] = ImageGenerator()
+    # app.config['contextModel'] = ContextRetriever()
     app.config['TTSModel'] = HuggingFaceTTS()
-    app.config['UPLOAD_FOLDER'] = "uploads"
 
     app.register_blueprint(main_bp)
     return app
