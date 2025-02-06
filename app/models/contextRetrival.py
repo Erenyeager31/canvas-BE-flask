@@ -200,13 +200,22 @@ class ContextRetriever:
             filename = os.path.basename(userDocURL).split("?")[0]  # Remove query params if any
             filepath = os.path.join(self.upload_dir, filename)
             
+            if not os.path.exists(self.upload_dir):
+                os.makedirs(self.upload_dir)
+            
+            filepath = filepath.replace('\\', '/')
+            
             # Download and save file to upload directory
+            print(f"Downloading document from: {userDocURL}")
             response = requests.get(userDocURL, timeout=10)
             response.raise_for_status()
-            
+            print(f"Document downloaded successfully. Saving to: {filepath}")
+
             with open(filepath, "wb") as file:
                 file.write(response.content)
                 
+            print(filepath)
+            
             # Extract text based on file type
             extracted_text = []
             if file_extension == ".pdf":
@@ -259,6 +268,7 @@ class ContextRetriever:
         except Exception as e:
             return {"status": "error", "message": f"Unexpected error: {e}"}
         finally:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            pass
+            # if os.path.exists(filepath):
+            #     os.remove(filepath)
 

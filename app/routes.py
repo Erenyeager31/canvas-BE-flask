@@ -7,6 +7,10 @@ from app.controllers.voiceGenController import genAudioController
 from app.controllers.videoGenController import videoGenController
 import re
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from app.utils.cloudinaryUploader import upload_audio_to_cloudinary
 
@@ -45,12 +49,40 @@ def genImage():
 
 @main_bp.route('/api/genAudio', methods=['POST'])
 def genAudio():
-    bodyJson = request.get_json()
-    texts, url, lang = bodyJson['texts'], bodyJson['url'], bodyJson['lang']
-    # audio_lang = bodyJson.get('audio_lang','en')
-    response = genAudioController(texts, url, lang)
-    print(response)
-    return jsonify(response)
+    # bodyJson = request.get_json()
+    # texts, url, lang = bodyJson['texts'], bodyJson['url'], bodyJson['lang']
+    # # audio_lang = bodyJson.get('audio_lang','en')
+    # response = genAudioController(texts, url, lang)
+    # print(response)
+    # print("Api response about to be sent")
+    # return response
+    # print("Api response sent")
+    # return jsonify(response)
+    try:
+        bodyJson = request.get_json()
+        if not bodyJson:
+            return jsonify({"error": "No JSON data provided"}), 400
+        
+        texts = bodyJson.get('texts')
+        url = bodyJson.get('url')
+        lang = bodyJson.get('lang', 'en')
+        
+        if not texts:
+            return jsonify({"error": "No texts provided"}), 400
+        
+        logger.info(f"Received request to generate {len(texts)} audio files")
+        
+        response = genAudioController(texts, url, lang)
+        logger.info("Controller processing completed")
+        
+        if "error" in response:
+            return jsonify(response), 400
+            
+        return jsonify(response)
+    
+    except Exception as e:
+        logger.error(f"Error in genAudio endpoint: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @main_bp.route('/api/upload', methods=['GET'])
 def upload():
