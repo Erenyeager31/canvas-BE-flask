@@ -70,7 +70,7 @@ def genAudio():
         if not texts:
             return jsonify({"error": "No texts provided"}), 400
         
-        logger.info(f"Received request to generate {len(texts)} audio files")
+        logger.info(f"Received request to generate {len(texts.split('.'))} audio files")
         
         response = genAudioController(texts, url, lang)
         logger.info("Controller processing completed")
