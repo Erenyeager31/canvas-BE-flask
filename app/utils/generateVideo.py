@@ -9,11 +9,11 @@ class VideoGenerator:
     def __init__(self, image_urls, audio_urls,story, output_filename="output.mp4"):
         # # Ensure data directories exist
         self.data_temp_dir = "data/temp"
-        # self.data_temp_audio_dir = os.path.join(self.data_temp_dir, "audio")
-        # self.data_temp_clips_dir = os.path.join(self.data_temp_dir, "clips")
+        self.data_temp_audio_dir = os.path.join(self.data_temp_dir, "audio")
+        self.data_temp_clips_dir = os.path.join(self.data_temp_dir, "clips")
         # print(self.data_temp_audio_dir,self.data_temp_clips_dir)
-        # os.makedirs(self.data_temp_audio_dir, exist_ok=True)
-        # os.makedirs(self.data_temp_clips_dir, exist_ok=True)
+        os.makedirs(self.data_temp_audio_dir, exist_ok=True)
+        os.makedirs(self.data_temp_clips_dir, exist_ok=True)
 
         # Store input parameters
         self.story = story
