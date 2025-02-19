@@ -26,7 +26,13 @@ def retriveContext(topic:str)->list:
 # def uploadDocument(files: List[Union[FileStorage, io.BytesIO]], filenames: List[str]):
 def uploadDocument():
     ContextModel = current_app.config['contextModel']
+    DB = current_app.config['DB']
     status = ContextModel.upload_context()
+
+    uploaded_files = status['uploaded_files']
+
+    DB.insert_data(uploaded_files)
+
     return status
 
 def retriveUserContextController(topic:str,userDocURL:str):

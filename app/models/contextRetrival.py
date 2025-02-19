@@ -128,6 +128,7 @@ class ContextRetriever:
             batch_size = 100
             vectors_batch = []
             upload_dir = "app/data/upload"
+            uploaded_files = []
 
             files = [f for f in os.listdir(upload_dir) if os.path.isfile(os.path.join(upload_dir, f))]
 
@@ -174,6 +175,8 @@ class ContextRetriever:
                             total_chunks += len(vectors_batch)
                             vectors_batch = []
 
+                    uploaded_files.append(clean_filename)
+
                 except Exception as e:
                     print(f"Error processing {filename}: {str(e)}")
                     continue
@@ -186,6 +189,7 @@ class ContextRetriever:
                 'status': 'success',
                 'total_chunks': total_chunks,
                 'chunk_names': chunk_names,  # Return the names of the chunks
+                'uploaded_files':uploaded_files,
                 'message': f"Successfully uploaded {total_chunks} chunks to the index."
             }
 

@@ -96,3 +96,19 @@ def genVideo():
     caption_lang = bodyJson.get('caption_lang','en')
     response = videoGenController(story, image_urls, audio_urls,caption_lang)
     return jsonify({"url": response})
+
+@main_bp.route('/api/getWords', methods=['GET'])
+def getWords():
+    print("Request received")
+    DBInstance = current_app.config['DB']
+    fileList = DBInstance.get_all_filenames()
+    # DBInstance.close_connection()
+    return jsonify({"fileList": fileList})
+
+@main_bp.route('/api/deleteAll', methods=['GET'])
+def deleteWords():
+    DBInstance = current_app.config['DB']
+    DBInstance.delete_all_data()
+    # DBInstance.close_connection()
+    return jsonify({"message":"DB cleared succesfully" })
+
