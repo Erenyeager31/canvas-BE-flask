@@ -1,6 +1,8 @@
 from flask import current_app
 from app.controllers.vectorDBcontroller import retriveContext, retriveUserContextController
 from app.utils.cloudinaryDeleteFiles import delete_files_from_cloudinary
+from app.utils.subjectExtractor import extract_subject
+from app.utils.subjectReplacer import replace_pronouns_and_nouns
 
 # Simplified style guides
 STYLE_GUIDES = {
@@ -61,10 +63,18 @@ def genNewScript(body: dict,userDocURL) -> dict:
 def genImgPrompts(story:str)->list:
     ScriptGenModel = current_app.config['ScriptGenModel']
     # returns a list
+    style_guide = story.split("#")[1]
+
+    subject = extract_subject(story)
+
     prompts = ScriptGenModel.generate_concise_image_prompts(
                 story=story,
+                subject=subject,
                 max_words=20,  # Adjust this for desired length
-                style_guide=STYLE_GUIDES['historical']
+                style_guide=style_guide
             )
+    
+    # replacing with subject
+    prompts = replace_pronouns_and_nouns(prompts,subject)
 
     return prompts

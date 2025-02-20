@@ -5,5 +5,4 @@ cenv
 instance/
 .DS_Store
 .pytest_cache/
-*.db
 *.env

@@ -53,112 +53,14 @@ class Phi2Generator:
         embeddings = self.encoder.encode([text, context])
         similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
         return similarity
-
-    # def generate_with_custom_instructions(
-    #     self,
-    #     context: str,
-    #     query: str,
-    #     words_per_sentence: int = 15,
-    #     temperature: float = 0.9
-    # ) -> Dict[str, Union[str, float]]:
-    #     try:
-    #         # Set absolute minimum and maximum token limits
-    #         MIN_CONTEXT_LENGTH = 50
-    #         MAX_NEW_TOKENS = 500
-    #         TOTAL_MAX_LENGTH = 2048  # Typical maximum for Phi-2
-            
-    #         # Ensure inputs are strings
-    #         context = str(context) if context is not None else ""
-    #         query = str(query) if query is not None else ""
-            
-    #         # Prepare the base prompt template
-    #         sentence_instruction = f"\nImportant: Use approximately {words_per_sentence} words per sentence." if words_per_sentence else ""
-    #         base_prompt = "Based on this historical context:\n{context}\n\nWrite a historical narrative that {query}{instruction}\n\nYour narrative should maintain consistent sentence lengths while being natural and engaging.\n\nNarrative:"
-            
-    #         # First, encode the context separately to get its token count
-    #         context_tokens = self.tokenizer.encode(
-    #             context,
-    #             add_special_tokens=False,  # Don't add special tokens yet
-    #             truncation=True,
-    #             max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
-    #         )
-            
-    #         # Truncate context if needed
-    #         if len(context_tokens) > (TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH):
-    #             context_tokens = context_tokens[:TOTAL_MAX_LENGTH - MAX_NEW_TOKENS - MIN_CONTEXT_LENGTH]
-            
-    #         # Decode truncated context back to string
-    #         truncated_context = self.tokenizer.decode(context_tokens, skip_special_tokens=True)
-            
-    #         # Format the full prompt with the truncated context
-    #         full_prompt = base_prompt.format(
-    #             context=truncated_context,
-    #             query=query,
-    #             instruction=sentence_instruction
-    #         )
-            
-    #         # Encode the full prompt properly
-    #         encoded_input = self.tokenizer(
-    #             full_prompt,
-    #             return_tensors="pt",
-    #             padding=True,
-    #             truncation=True,
-    #             max_length=TOTAL_MAX_LENGTH - MAX_NEW_TOKENS
-    #         )
-            
-    #         # Move to device
-    #         input_ids = encoded_input["input_ids"].to(self.device)
-    #         attention_mask = encoded_input["attention_mask"].to(self.device)
-            
-    #         # Generate text
-    #         outputs = self.model.generate(
-    #             input_ids=input_ids,
-    #             attention_mask=attention_mask,
-    #             max_new_tokens=MAX_NEW_TOKENS,
-    #             min_length=50,
-    #             temperature=temperature,
-    #             top_p=0.92,
-    #             top_k=40,
-    #             repetition_penalty=1.1,
-    #             do_sample=True,
-    #             pad_token_id=self.tokenizer.pad_token_id,
-    #             eos_token_id=self.tokenizer.eos_token_id
-    #         )
-            
-    #         # Process the generated text
-    #         story = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            
-    #         # Clean up the output
-    #         if "Narrative:" in story:
-    #             story = story.split("Narrative:")[-1].strip()
-    #         story = story.replace("Context:", "").replace("Query:", "").strip()
-            
-    #         # Calculate metrics
-    #         relevance_score = self.get_context_relevance(query, context)
-    #         sentences = [s.strip() for s in story.split('.') if s.strip()]
-    #         avg_words = sum(len(s.split()) for s in sentences) / len(sentences) if sentences else 0
-            
-    #         return {
-    #             'generated_text': story,
-    #             'relevance_score': relevance_score,
-    #             'avg_words_per_sentence': avg_words,
-    #             'num_sentences': len(sentences),
-    #             'total_words': sum(len(s.split()) for s in sentences)
-    #         }
-            
-    #     except Exception as e:
-    #         logger.error(f"Error in story generation: {str(e)}")
-    #         return {
-    #             'generated_text': "Error occurred during text generation.",
-    #             'error': str(e)
-    #         }
     
     def generate_with_custom_instructions(
         self,
         context: str,
         query: str,
+        style_guide:str="Historical",
         words_per_sentence: int = 15,
-        temperature: float = 0.9
+        temperature: float = 0.9,
     ) -> Dict[str, Union[str, float]]:
         try:
             # Set absolute minimum and maximum token limits
@@ -170,18 +72,27 @@ class Phi2Generator:
             # Ensure inputs are strings
             context = str(context) if context is not None else ""
             query = str(query) if query is not None else ""
+
+            style_map = {
+                "Historical": "Provide a historical account of",
+                "Biography": "Write an inspiring biography of",
+                "Cinematic": "Write a cinematic narration of"
+            }
+            
+            # Get the appropriate style instruction or use default if style not found
+            style_instruction = style_map.get(style_guide, "Provide a historical account of")
             
             # Prepare the base prompt template with emphasis on narrative flow
-            sentence_instruction = f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence. Your response MUST be between 100-150 words total. Do not exceed 150 words." if words_per_sentence else "\nImportant: Write in a clear narrative style. Your response MUST be between 100-150 words total. Do not exceed 150 words."
+            sentence_instruction = (f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence. Your response MUST be between 100-150 words total. Do not exceed 150 words." 
+            if words_per_sentence else 
+                "\nImportant: Write in a clear narrative style. Your response MUST be between 100-150 words total. Do not exceed 150 words.")
             base_prompt = """Based on this context:
             {context}
 
-            Write an engaging narrative that {query}{instruction}
-
+            {style_instruction} {query}{instruction}
+            
             Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
-
             Count your total words carefully before submitting. If your narrative exceeds 150 words, revise it to fit within the 100-150 word limit while preserving the most important information.
-
             Narrative:"""
             
             # Rest of the function remains the same...
@@ -200,7 +111,8 @@ class Phi2Generator:
             full_prompt = base_prompt.format(
                 context=truncated_context,
                 query=query,
-                instruction=sentence_instruction
+                instruction=sentence_instruction,
+                style_instruction=style_instruction
             )
             
             encoded_input = self.tokenizer(
@@ -272,13 +184,98 @@ class Phi2Generator:
                 'error': str(e)
             }
    
+    # def generate_concise_image_prompts(
+    #     # model,
+    #     # tokenizer,
+    #     self,
+    #     story: str,
+    #     max_words: int = 30,
+    #     style_guide: str = "vintage. antique. period",
+    #     temperature: float = 0.7
+    # ) -> List[str]:
+    #     """
+    #     Convert a story into concise image generation prompts.
+
+    #     Args:
+    #         model: The language model (Phi-2)
+    #         tokenizer: The model's tokenizer
+    #         story: Input story text
+    #         max_words: Maximum number of words per prompt
+    #         style_guide: Brief style specifications
+    #         temperature: Temperature for generation
+
+    #     Returns:
+    #         List of concise image generation prompts
+    #     """
+    #     try:
+    #         image_style_map = {
+    #             "Historical": "vintage. antique. period.",
+    #             "Biography": "portrait. candid. iconic",
+    #             "Cinematic": "dramatic. scenic. cinematography"
+    #         }
+
+    #         sentences = [s.strip() for s in story.split('.') if s.strip()]
+    #         image_prompts = []
+
+    #         system_prompt = f"""Convert the sentence into a concise, vivid image prompt. 
+    #         - Retain key words from the sentence.
+    #         - Avoid pronouns; use the subject's name explicitly.
+    #         - Focus solely on visual elements present in the sentence.
+    #         - Ensure the prompt is entirely based on the sentence.
+    #         - Use a maximum of {max_words} words.
+    #         - End with: {image_style_map.get(style_guide, '')}"""
+
+    #         for sentence in sentences:
+    #             input_prompt = f"""{system_prompt}
+    #             Sentence: "{sentence}"
+    #             Brief image prompt:"""
+
+    #             inputs = self.tokenizer(
+    #                 input_prompt,
+    #                 return_tensors="pt",
+    #                 truncation=True,
+    #                 padding=True
+    #             ).to(self.device)
+
+    #             # Set stricter length limits
+    #             outputs = self.model.generate(
+    #                 **inputs,
+    #                 max_length=150,  # Reduced from previous version
+    #                 min_length=20,   # Ensure some minimum content
+    #                 temperature=temperature,
+    #                 top_p=0.9,
+    #                 top_k=50,
+    #                 repetition_penalty=1.2,
+    #                 do_sample=True,
+    #                 num_return_sequences=1
+    #             )
+
+    #             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+    #             prompt = generated_text.split("Brief image prompt:")[-1].strip()
+
+    #             # Enforce word limit through post-processing
+    #             words = prompt.split()
+    #             if len(words) > max_words:
+    #                 prompt = ' '.join(words[:max_words-2] + [style_guide])
+    #             elif style_guide.lower() not in prompt.lower():
+    #                 prompt = f"{prompt}, {style_guide}"
+
+    #             image_prompts.append(prompt)
+
+    #         return image_prompts
+
+    #     except Exception as e:
+    #         print(f"Error generating image prompts: {str(e)}")
+    #         return []
+
     def generate_concise_image_prompts(
         # model,
         # tokenizer,
         self,
         story: str,
+        subject:str="",
+        style_guide: str = "vintage. antique. period",
         max_words: int = 30,
-        style_guide: str = "realistic, cinematic, 8k",
         temperature: float = 0.7
     ) -> List[str]:
         """
@@ -296,24 +293,27 @@ class Phi2Generator:
             List of concise image generation prompts
         """
         try:
+            image_style_map = {
+                "Historical": "vintage. antique. period.",
+                "Biography": "portrait. candid. iconic",
+                "Cinematic": "dramatic. scenic. cinematography"
+            }
+
             sentences = [s.strip() for s in story.split('.') if s.strip()]
             image_prompts = []
 
-            # Shorter system prompt encouraging brevity
-            system_prompt = f"""Convert the sentence into a concise, vivid image prompt. 
-- Retain key words from the sentence.
-- Avoid pronouns; use the subject's name explicitly.
-- Focus solely on visual elements present in the sentence.
-- Ensure the prompt is entirely based on the sentence.
-- Use a maximum of {max_words} words.
-- End with: {style_guide}"""
+            system_prompt = f"""Convert the sentence into a concise, vivid image prompt.
+            - Retain key words from the sentence.
+            - Focus solely on visual elements present in the sentence.
+            - Ensure the prompt is entirely based on the sentence.
+            - Use a maximum of {max_words} words."""
+            # - End with: {image_style_map.get(style_guide, '')}"""
+            # - Avoid pronouns; use the subject's name explicitly.
 
             for sentence in sentences:
                 input_prompt = f"""{system_prompt}
-
-    Sentence: "{sentence}"
-
-    Brief image prompt:"""
+                Sentence: "{sentence}"
+                Brief image prompt:"""
 
                 inputs = self.tokenizer(
                     input_prompt,
@@ -341,9 +341,9 @@ class Phi2Generator:
                 # Enforce word limit through post-processing
                 words = prompt.split()
                 if len(words) > max_words:
-                    prompt = ' '.join(words[:max_words-2] + [style_guide])
+                    prompt = ' '.join(words[:max_words-2] + [image_style_map.get(style_guide)])
                 elif style_guide.lower() not in prompt.lower():
-                    prompt = f"{prompt}, {style_guide}"
+                    prompt = f"{prompt}, {image_style_map.get(style_guide)}"
 
                 image_prompts.append(prompt)
 
