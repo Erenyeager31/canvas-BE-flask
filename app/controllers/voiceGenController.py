@@ -24,25 +24,32 @@ from app.utils.translateToHindi import translator
 
 #     return audioUrls
 
+import asyncio
+
 def genAudioController(texts, url, lang="en"):
     try:
         TTSModel = current_app.config['TTSModel']
-        
-        textsinModifiedlanguage = translator(texts) if lang == "hi" else texts
-        print(len(textsinModifiedlanguage.split(".")))
-        
+
+        # Use asyncio.run() to call the async translator function
+        textsinModifiedlanguage = (
+            asyncio.run(translator(texts)) if lang == "hi" else texts
+        )
+
+        if textsinModifiedlanguage is None:
+            raise ValueError("Translation failed, received None")
+
+        # Filter out empty strings after splitting
+        sentences = [s.strip() for s in textsinModifiedlanguage.split(".") if s.strip()]
+        print(f"Number of sentences to process: {len(sentences)}")
+
         audioUrls = TTSModel.synthesize_and_upload(
-            textsinModifiedlanguage.split("."), 
+            sentences, 
             url=url, 
             language=lang
         )
-        
+
         return audioUrls or []
 
-        # return [
-        #     textsinModifiedlanguage
-        # ]
-        
     except Exception as e:
         print(f"Error in genAudioController: {str(e)}")
         return []

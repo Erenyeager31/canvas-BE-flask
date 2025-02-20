@@ -172,15 +172,17 @@ class Phi2Generator:
             query = str(query) if query is not None else ""
             
             # Prepare the base prompt template with emphasis on narrative flow
-            sentence_instruction = f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence and keep the total response between 100-150 words." if words_per_sentence else "\nImportant: Write in a clear narrative style and keep the total response between 100-150 words."
-            base_prompt = """Based on this historical context:
-{context}
+            sentence_instruction = f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence. Your response MUST be between 100-150 words total. Do not exceed 150 words." if words_per_sentence else "\nImportant: Write in a clear narrative style. Your response MUST be between 100-150 words total. Do not exceed 150 words."
+            base_prompt = """Based on this context:
+            {context}
 
-Write an engaging historical narrative that {query}{instruction}
+            Write an engaging narrative that {query}{instruction}
 
-Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
+            Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
 
-Narrative:"""
+            Count your total words carefully before submitting. If your narrative exceeds 150 words, revise it to fit within the 100-150 word limit while preserving the most important information.
+
+            Narrative:"""
             
             # Rest of the function remains the same...
             context_tokens = self.tokenizer.encode(
@@ -276,7 +278,7 @@ Narrative:"""
         self,
         story: str,
         max_words: int = 30,
-        style_guide: str = "cinematic, 8k",
+        style_guide: str = "realistic, cinematic, 8k",
         temperature: float = 0.7
     ) -> List[str]:
         """
@@ -298,10 +300,13 @@ Narrative:"""
             image_prompts = []
 
             # Shorter system prompt encouraging brevity
-            system_prompt = f"""Convert the sentence into a brief, vivid image prompt. Focus on the subject present in the Sentence.
-    Use max {max_words} words.
-    Focus on key visual elements only.
-    End with: {style_guide}"""
+            system_prompt = f"""Convert the sentence into a concise, vivid image prompt. 
+- Retain key words from the sentence.
+- Avoid pronouns; use the subject's name explicitly.
+- Focus solely on visual elements present in the sentence.
+- Ensure the prompt is entirely based on the sentence.
+- Use a maximum of {max_words} words.
+- End with: {style_guide}"""
 
             for sentence in sentences:
                 input_prompt = f"""{system_prompt}
@@ -320,7 +325,7 @@ Narrative:"""
                 # Set stricter length limits
                 outputs = self.model.generate(
                     **inputs,
-                    max_length=100,  # Reduced from previous version
+                    max_length=150,  # Reduced from previous version
                     min_length=20,   # Ensure some minimum content
                     temperature=temperature,
                     top_p=0.9,

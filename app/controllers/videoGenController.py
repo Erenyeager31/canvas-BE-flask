@@ -1,10 +1,15 @@
 from app.utils.generateVideo import VideoGenerator
 from app.utils.translateToHindi import translator
+import asyncio
 
 def videoGenController(story:str,image_urls:list,audio_urls:list,caption_lang='en'):
     storyInModifiedLanguage = ""
     if caption_lang == "hi":
-        storyInModifiedLanguage = translator(story)
+        storyInModifiedLanguage = asyncio.run(translator(story))
+        if storyInModifiedLanguage is None:
+            # Fallback to original story if translation fails
+            print("Translation failed, using original text")
+            storyInModifiedLanguage = story
     else:
         storyInModifiedLanguage = story
 

@@ -33,10 +33,11 @@
 
 #     return ".".join(translated_chunks)
 
+import asyncio
 from googletrans import Translator
 from typing import Optional
 
-def translator(story: str) -> Optional[str]:
+async def translator(story: str) -> Optional[str]:
     try:
         # Input validation
         if not isinstance(story, str) or not story.strip():
@@ -52,7 +53,8 @@ def translator(story: str) -> Optional[str]:
         translated_sentences = []
         for sentence in sentences:
             try:
-                translation = translator.translate(sentence, src='en', dest='hi')
+                # Properly await the translation
+                translation = await translator.translate(sentence, src='en', dest='hi')
                 translated_sentences.append(translation.text)
                 print(f"Og : {sentence}")
                 print(f"T : {translation.text}")

@@ -40,7 +40,7 @@ class ContextRetriever:
         self.chunk_size = 5
         self.chunk_overlap = 2
 
-    def retrieve_context(self, topic: str, top_k: int = 5) -> List[Dict]:
+    def retrieve_context(self, topic: str, top_k: int = 10) -> List[Dict]:
         """Retrieve context based on the topic passed as an argument."""
         try:
             # Generate embedding for the topic
