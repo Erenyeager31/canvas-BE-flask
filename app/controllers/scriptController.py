@@ -33,6 +33,10 @@ def genNewScript(body: dict,userDocURL) -> dict:
 
     ScriptGenModel = current_app.config['ScriptGenModel']
     
+    # obtain style_guide
+    style_guide = topic.split("#")[1]
+    topic = topic.split("#")[0]
+    
     # based on whether user has provided doc or not, fetch context
     context = ""
     if userDocURL:
@@ -48,6 +52,7 @@ def genNewScript(body: dict,userDocURL) -> dict:
     result = ScriptGenModel.generate_with_custom_instructions(
         context=context,
         query=topic,
+        style_guide=style_guide
     )
     
     if 'generated_text' in result:
@@ -64,13 +69,13 @@ def genImgPrompts(story:str)->list:
     ScriptGenModel = current_app.config['ScriptGenModel']
     # returns a list
     style_guide = story.split("#")[1]
+    story = story.split("#")[0]
 
     subject = extract_subject(story)
 
     prompts = ScriptGenModel.generate_concise_image_prompts(
                 story=story,
-                subject=subject,
-                max_words=20,  # Adjust this for desired length
+                # subject=subject,
                 style_guide=style_guide
             )
     

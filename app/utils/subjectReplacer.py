@@ -2,6 +2,7 @@ import re
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.tag import pos_tag
+nltk.download('averaged_perceptron_tagger_eng')
 
 def replace_pronouns_and_nouns(sentences, subject):
     """
@@ -29,10 +30,38 @@ def replace_pronouns_and_nouns(sentences, subject):
     }
 
     common_nouns = {
-        "person", "man", "woman", "boy", "girl", "child", "kid", "teen", "teenager",
-        "individual", "character", "figure", "guy", "lady", "gentleman", "male", "female",
-        "youth", "youngster", "adult", "citizen", "human", "inhabitant", "resident"
-    }
+    # General terms
+    "person", "man", "woman", "boy", "girl", "child", "kid", "teen", "teenager",
+    "individual", "character", "figure", "guy", "lady", "gentleman", "male",
+    "female", "youth", "youngster", "adult", "citizen", "human", "inhabitant",
+    "resident", "worker", "employee", "boss", "leader", "follower",
+
+    # Titles & Nobility
+    "king", "queen", "prince", "princess", "duke", "duchess", "emperor",
+    "empress", "lord", "lady", "knight", "baron", "baroness", "noble",
+    "czar", "sultan", "chief", "chancellor", "regent",
+
+    # Professional roles
+    "teacher", "student", "professor", "doctor", "nurse", "scientist", 
+    "engineer", "artist", "writer", "musician", "actor", "director", 
+    "player", "athlete", "coach", "driver", "pilot", "singer", "dancer",
+    "lawyer", "judge", "chef", "farmer", "soldier", "officer", "detective",
+    "minister", "priest", "monk", "nun", "policeman", "firefighter",
+    "author", "poet", "journalist", "reporter", "photographer",
+    "entrepreneur", "businessperson", "banker", "trader", "merchant",
+    "worker", "clerk", "cashier", "guard", "janitor", "tailor", "blacksmith",
+    "carpenter", "mechanic", "electrician", "plumber",
+
+    # Mythical & Fictional characters
+    "hero", "villain", "wizard", "witch", "elf", "dwarf", "giant", "fairy",
+    "vampire", "werewolf", "ghost", "zombie", "mermaid", "dragon", "sorcerer",
+    "demon", "angel", "god", "goddess",
+
+    # Miscellaneous
+    "nomad", "wanderer", "explorer", "adventurer", "pirate", "thief", 
+    "merchant", "trader", "pilgrim", "scholar", "sage", "bard", "seer",
+    "prophet", "outlaw", "criminal", "prisoner", "slave", "servant"
+}
 
     updated_sentences = []
 

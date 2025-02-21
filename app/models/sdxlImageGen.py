@@ -7,13 +7,14 @@ class ImageGenerator:
         Initializes the image generation pipeline with a predefined model path.
         """
         model_path = "rupeshs/sdxl-turbo-openvino-int8"
+        # model_path = "rupeshs/SDXL-Lightning-2steps-openvino-int8"
         self.pipeline = OVStableDiffusionXLPipeline.from_pretrained(
             model_path,
             ov_config={"CACHE_DIR": ""},
         )
 
-    def generate_images(self, prompts: list, width: int = 512, height: int = 512, 
-                        num_inference_steps: int = 1, guidance_scale: float = 1.0, 
+    def generate_images(self, prompts: list, width: int = 1024, height: int = 576, 
+                        num_inference_steps: int = 5, guidance_scale: float = 1.0, 
                         output_dir: str = "./"):
         """
         Generates images for a list of prompts and saves each to a file.
