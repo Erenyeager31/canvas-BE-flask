@@ -19,6 +19,7 @@ CORS(main_bp)  # Allow CORS for all routes in this blueprint
 
 # command to run
 # flask --app run.py --debug run
+# pip install langchain langchain-community transformers torch accelerate -- run this command
 
 os.makedirs("uploads", exist_ok=True)
 

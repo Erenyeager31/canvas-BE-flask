@@ -6,6 +6,10 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from app.utils.subjectExtractor import extract_subject
 import re
+from langchain.llms import HuggingFacePipeline
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from transformers import pipeline
 
 # pip install torch==2.5.1+cu121 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 # As per colab configuration, the torch version is 1.9.0+cu102
@@ -24,7 +28,7 @@ class Phi2Generator:
         try:
             self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
             logger.info(f"Using device: {self.device}")
-            
+
             logger.info(f"Loading Phi-2 model: {model_name}")
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
@@ -33,15 +37,28 @@ class Phi2Generator:
             )
             logger.info("Model loaded, starting tokenizer...")
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            
+
             logger.info(f"Loading embedding model: {embedding_model}")
             self.encoder = SentenceTransformer(embedding_model)
-            
+
             self.model = self.model.to(self.device)
-            
+
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
-            
+
+            self.pipe = pipeline(
+                "text-generation",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                max_new_tokens=150,
+                do_sample=True,
+                temperature=0.7
+            )
+            self.llm = HuggingFacePipeline(pipeline=self.pipe)
+
+            # Initialize LangChain components
+            # self._setup_chains()
+
             logger.info(f"Loading complete...")
                 
         except Exception as e:
