@@ -261,6 +261,19 @@ class Phi2Generator:
                     num_return_sequences=1
                 )
 
+                # outputs = self.model.generate(
+                #     **inputs,
+                #     max_new_tokens=30,      # Reduced from 50 to help enforce word limit
+                #     min_length=10,          # Reduced from 20 since image prompts can be concise
+                #     temperature=0.5,        # Reduced from 0.7 for more focused outputs
+                #     top_p=0.85,            # Slightly reduced for more conservative sampling
+                #     top_k=40,              # Reduced from 50 to limit vocabulary diversity
+                #     repetition_penalty=1.3, # Increased slightly to avoid repetitive phrases
+                #     do_sample=True,
+                #     num_return_sequences=1,
+                #     no_repeat_ngram_size=2  # Added to prevent phrase repetition
+                # )
+
                 generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                 prompt = generated_text.split("Brief image prompt:")[-1].strip()
 

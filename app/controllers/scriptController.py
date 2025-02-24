@@ -125,7 +125,9 @@ def genImgPrompts(story:str)->list:
                 style_guide=style_guide
             )
 
-        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"""',"")
+        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
+        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace("'","")
+        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('`',"")
         prompt.replace("\n","")
 
         pos = prompt.find("```")
@@ -149,7 +151,9 @@ def genImgPrompts(story:str)->list:
         print("Obtained prompt :",prompt,"\n\n")
         useless_list = [w for w in useless_words if w in prompt]
         while len(useless_list) != 0 or len(prompt.split(" ")) < 10:
-            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"""',"")
+            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
+            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace("'","")
+            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('`',"")
             prompt.replace("\n","")
 
             pos = prompt.find("```")

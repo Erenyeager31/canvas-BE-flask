@@ -16,6 +16,8 @@ class ImageGenerator:
     def generate_images(self, prompts: list, width: int = 1024, height: int = 576, 
                         num_inference_steps: int = 5, guidance_scale: float = 1.0, 
                         output_dir: str = "./"):
+        
+        # w --> 512, h --> 384, inf --> 3
         """
         Generates images for a list of prompts and saves each to a file.
         
