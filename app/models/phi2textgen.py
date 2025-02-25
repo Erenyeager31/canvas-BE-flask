@@ -203,6 +203,91 @@ class Phi2Generator:
                 'error': str(e)
             }
 
+    # def generate_concise_image_prompts(
+    #     self,
+    #     story: str,
+    #     style_guide: str = "cinematic, 8k",
+    #     max_words: int = 20,
+    #     temperature: float = 0.7
+    # ) -> List[str]:
+    #     """
+    #     Convert a story into concise image generation prompts.
+
+    #     Args:
+    #         model: The language model (Phi-2)
+    #         tokenizer: The model's tokenizer
+    #         story: Input story text
+    #         max_words: Maximum number of words per prompt
+    #         style_guide: Brief style specifications
+    #         temperature: Temperature for generation
+
+    #     Returns:
+    #         List of concise image generation prompts
+    #     """
+    #     try:
+    #         sentences = [s.strip() for s in story.split('.') if s.strip()]
+    #         image_prompts = []
+
+    #         # Shorter system prompt encouraging brevity
+    #         system_prompt = f"""Describe this sentence visually to a painter in detail
+    # Use max {max_words} words."""
+
+    #         for sentence in sentences:
+    #             input_prompt = f"""{system_prompt}
+
+    # Sentence: "{sentence}"
+
+    # Brief image prompt:"""
+
+    #             inputs = self.tokenizer(
+    #                 input_prompt,
+    #                 return_tensors="pt",
+    #                 truncation=True,
+    #                 padding=True
+    #             ).to(self.device)
+
+    #             # Set stricter length limits
+    #             # outputs = self.model.generate(
+    #             #     **inputs,
+    #             #     max_length=100,  # Reduced from previous version
+    #             #     min_length=20,   # Ensure some minimum content
+    #             #     temperature=temperature,
+    #             #     top_p=0.9,
+    #             #     top_k=50,
+    #             #     repetition_penalty=1.2,
+    #             #     do_sample=True,
+    #             #     num_return_sequences=1
+    #             # )
+
+    #             outputs = self.model.generate(
+    #                 **inputs,
+    #                 max_new_tokens=40,      # Reduced from 50 to help enforce word limit
+    #                 min_length=10,          # Reduced from 20 since image prompts can be concise
+    #                 temperature=0.5,        # Reduced from 0.7 for more focused outputs
+    #                 top_p=0.85,            # Slightly reduced for more conservative sampling
+    #                 top_k=40,              # Reduced from 50 to limit vocabulary diversity
+    #                 repetition_penalty=1.3, # Increased slightly to avoid repetitive phrases
+    #                 do_sample=True,
+    #                 num_return_sequences=1,
+    #                 no_repeat_ngram_size=2  # Added to prevent phrase repetition
+    #             )
+
+    #             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+    #             prompt = generated_text.split("Brief image prompt:")[-1].strip()
+
+    #             # Enforce word limit through post-processing
+    #             prompt = f"{prompt}, {style_guide}"
+                    
+    #             print(prompt)
+
+    #             image_prompts.append(prompt)
+
+    #         return image_prompts
+
+    #     except Exception as e:
+    #         print(f"Error generating image prompts: {str(e)}")
+    #         return []
+    
     def generate_concise_image_prompts(
         self,
         story: str,
@@ -228,18 +313,36 @@ class Phi2Generator:
             sentences = [s.strip() for s in story.split('.') if s.strip()]
             image_prompts = []
 
+            style_map = {
+              "Historical": "vintage. antique. period.",
+              "Biography": "portrait. candid. iconic",
+              "Cinematic": "dramatic. scenic. cinematography"
+            }
+
+            style_guide = style_map.get(style_guide,"Cinematic")
+
             # Shorter system prompt encouraging brevity
-            system_prompt = f"""Convert the sentence into a brief, vivid image prompt. Focus on the subject present in the Sentence.
-    Use max {max_words} words.
-    Focus on key visual elements only.
-    End with: {style_guide}"""
+    #         system_prompt = f"""Convert the sentence into a brief, vivid image prompt. Focus on the subject present in the Sentence.
+    # determine the subject and landscape and use it construct the prompt
+    # Use max {max_words} words.
+    # Focus on key visual elements only.
+    # End with: {style_guide}"""
+            # system_prompt = f"""Try to visually describe the sentence to a painter in detail.
+            # Stick to the
+            # limit to {max_words} words. \n\n
+            # """
+
+            system_prompt=f"""
+            Describe this sentence visually to a painter in a simple manner.
+            Focus on subject
+            Combine into single sentence in {max_words} words
+            """
 
             for sentence in sentences:
                 input_prompt = f"""{system_prompt}
-
-    Sentence: "{sentence}"
-
-    Brief image prompt:"""
+                Sentence: "{sentence}"
+                \n\n
+                Brief image prompt:"""
 
                 inputs = self.tokenizer(
                     input_prompt,
@@ -251,40 +354,24 @@ class Phi2Generator:
                 # Set stricter length limits
                 outputs = self.model.generate(
                     **inputs,
-                    max_length=100,  # Reduced from previous version
-                    min_length=20,   # Ensure some minimum content
-                    temperature=temperature,
-                    top_p=0.9,
-                    top_k=50,
-                    repetition_penalty=1.2,
+                    max_new_tokens=50,      #
+                    min_length=10,         
+                    temperature=0.7,       
+                    top_p=0.85,           
+                    top_k=40,             
+                    repetition_penalty=1.3,
                     do_sample=True,
-                    num_return_sequences=1
+                    num_return_sequences=1,
+                    no_repeat_ngram_size=2 
                 )
-
-                # outputs = self.model.generate(
-                #     **inputs,
-                #     max_new_tokens=30,      # Reduced from 50 to help enforce word limit
-                #     min_length=10,          # Reduced from 20 since image prompts can be concise
-                #     temperature=0.5,        # Reduced from 0.7 for more focused outputs
-                #     top_p=0.85,            # Slightly reduced for more conservative sampling
-                #     top_k=40,              # Reduced from 50 to limit vocabulary diversity
-                #     repetition_penalty=1.3, # Increased slightly to avoid repetitive phrases
-                #     do_sample=True,
-                #     num_return_sequences=1,
-                #     no_repeat_ngram_size=2  # Added to prevent phrase repetition
-                # )
 
                 generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                 prompt = generated_text.split("Brief image prompt:")[-1].strip()
 
                 # Enforce word limit through post-processing
-                words = prompt.split()
-                if len(words) > max_words:
-                    prompt = ' '.join(words[:max_words-2] + [style_guide])
-                elif style_guide.lower() not in prompt.lower():
-                    prompt = f"{prompt}, {style_guide}"
-                    
-                print(prompt)
+                prompt = f"{prompt}, {style_guide}"
+
+                # print(prompt)
 
                 image_prompts.append(prompt)
 

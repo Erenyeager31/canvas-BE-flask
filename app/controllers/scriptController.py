@@ -38,9 +38,21 @@ useless_words = [
     "*", "#", "-", "_", ">", "\\n", "\\t",
     "{", "}", "[", "]", "(", ")",
     "=>", "::", "\"\"\"",
-    "Σ", "∫", "≈", "→", "⊆"
+    "Σ", "∫", "≈", "→", "⊆",
+    "#","http","https","()",
+    "(",")"
 ]
 
+def clean_prompt(prompt: str) -> str:
+    """Removes unwanted characters and patterns from the prompt."""
+    prompt = prompt.replace('"', '').replace("'", "").replace('`', "").replace("\n", "")
+    
+    for char in ["```", "-", "*", "_", "import", "def"]:
+        pos = prompt.find(char)
+        if pos != -1:
+            prompt = prompt[:pos]
+
+    return prompt.strip()
 
 # def genNewScript(body:dict)->dict:
 #     topic = body['topic']
@@ -100,86 +112,128 @@ def genNewScript(body: dict,userDocURL) -> dict:
     print(result)
     return result
 
-def genImgPrompts(story:str)->list:
+# def genImgPrompts(story:str)->list:
+#     ScriptGenModel = current_app.config['ScriptGenModel']
+#     # returns a list
+#     style_guide = story.split("#")[1]
+#     story = story.split("#")[0]
+
+#     subject = extract_subject(story)
+
+#     prompts = ScriptGenModel.generate_concise_image_prompts(
+#                 story=story,
+#                 # subject=subject,
+#                 style_guide=style_guide
+#             )
+    
+#     final_prompt = []
+    
+#     for text in story.split("."):
+#         if not text.strip(): continue
+
+#         prompts = ScriptGenModel.generate_concise_image_prompts(
+#                 story=text+".",
+#                 # subject=subject,
+#                 style_guide=style_guide
+#             )
+
+#         prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
+#         prompt = prompt.replace("'","")
+#         prompt = prompt.replace('`',"")
+#         prompt.replace("\n","")
+
+#         pos = prompt.find("```")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         pos = prompt.find("-")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         pos = prompt.find("*")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         pos = prompt.find("_")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         pos = prompt.find("import")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         pos = prompt.find("def")
+#         prompt = prompt[:pos] if pos != -1 else prompt
+
+#         print("Obtained prompt :",prompt,"\n\n")
+#         useless_list = [w for w in useless_words if w in prompt]
+#         while len(useless_list) != 0 or len(prompt.split(" ")) < 10:
+#             prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
+#             prompt = prompt.replace("'","")
+#             prompt = prompt.replace('`',"")
+#             prompt.replace("\n","")
+
+#             pos = prompt.find("```")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             pos = prompt.find("-")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             pos = prompt.find("*")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             pos = prompt.find("_")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             pos = prompt.find("import")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             pos = prompt.find("def")
+#             prompt = prompt[:pos] if pos != -1 else prompt
+
+#             print("Obtained prompt :",prompt,"\n\n")  
+#             # print(prompt,"\n\n")
+#             useless_list = [w for w in useless_words if w in prompt]
+#             final_prompt.append(prompt)
+    
+#     # replacing with subject
+#     prompts = replace_pronouns_or_nouns(final_prompt,subject)
+
+#     return prompts
+def genImgPrompts(story: str) -> list:
     ScriptGenModel = current_app.config['ScriptGenModel']
-    # returns a list
-    style_guide = story.split("#")[1]
-    story = story.split("#")[0]
-
-    subject = extract_subject(story)
-
-    prompts = ScriptGenModel.generate_concise_image_prompts(
-                story=story,
-                # subject=subject,
-                style_guide=style_guide
-            )
     
-    final_prompt = []
+    parts = story.split("#")
+    story_text = parts[0]
+    style_guide = parts[1] if len(parts) > 1 else "Historical"
+
+    # subject = extract_subject(story_text)
+    subject = parts[2]
+
+    final_prompts = []
+
+    for sentence in story_text.split("."):
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+
+        prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide=style_guide)[0]
+        prompt = clean_prompt(prompt)
+
+        retries = 5  # Prevent infinite loops
+        while any(w in prompt for w in useless_words) or len(prompt.split()) < 10:
+            if retries == 0:
+                break
+            prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide="Biography")[0]
+            prompt = clean_prompt(prompt)
+            retries -= 1
+
+        # **Skip invalid prompts**
+        if not prompt or "[image]" in prompt or "self." in prompt or "sentences =" in prompt:
+            continue  
+
+        final_prompts.append(prompt)
     
-    for text in story.split("."):
-        if not text.strip(): continue
-
-        prompts = ScriptGenModel.generate_concise_image_prompts(
-                story=text+".",
-                # subject=subject,
-                style_guide=style_guide
-            )
-
-        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
-        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace("'","")
-        prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('`',"")
-        prompt.replace("\n","")
-
-        pos = prompt.find("```")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        pos = prompt.find("-")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        pos = prompt.find("*")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        pos = prompt.find("_")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        pos = prompt.find("import")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        pos = prompt.find("def")
-        prompt = prompt[:pos] if pos != -1 else prompt
-
-        print("Obtained prompt :",prompt,"\n\n")
-        useless_list = [w for w in useless_words if w in prompt]
-        while len(useless_list) != 0 or len(prompt.split(" ")) < 10:
-            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
-            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace("'","")
-            prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('`',"")
-            prompt.replace("\n","")
-
-            pos = prompt.find("```")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            pos = prompt.find("-")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            pos = prompt.find("*")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            pos = prompt.find("_")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            pos = prompt.find("import")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            pos = prompt.find("def")
-            prompt = prompt[:pos] if pos != -1 else prompt
-
-            print("Obtained prompt :",prompt,"\n\n")  
-            # print(prompt,"\n\n")
-            useless_list = [w for w in useless_words if w in prompt]
-            final_prompt.append(prompt)
+    for f in final_prompts:
+        f = f"{subject}.{f}"
+        
+    final_prompts = replace_pronouns_or_nouns(final_prompts,subject)
     
-    # replacing with subject
-    prompts = replace_pronouns_or_nouns(final_prompt,subject)
+    print(final_prompts)
 
-    return prompts
+    return final_prompts

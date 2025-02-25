@@ -17,6 +17,8 @@ from app.utils.cloudinaryUploader import upload_audio_to_cloudinary
 main_bp = Blueprint('main', __name__)
 CORS(main_bp)  # Allow CORS for all routes in this blueprint
 
+# torch-2.5.1+cu121
+
 # command to run
 # flask --app run.py --debug run
 # pip install langchain langchain-community transformers torch accelerate -- run this command
@@ -45,7 +47,13 @@ def newImgPrompts():
 @main_bp.route('/api/genImage', methods=['POST'])
 def genImage():
     bodyJson = request.get_json()
-    response = genImagefn(prompts=bodyJson['prompts'])
+    response = genImagefn(
+        prompts=bodyJson['prompts'],
+        width=bodyJson['width'],
+        height=bodyJson['height'],
+        num_inference_steps=bodyJson['inference_steps'],
+        guidance_scale=bodyJson['guidance_scale'],
+        )
     return jsonify(response)
 
 @main_bp.route('/api/genAudio', methods=['POST'])
