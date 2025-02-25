@@ -40,7 +40,7 @@ useless_words = [
     "=>", "::", "\"\"\"",
     "Σ", "∫", "≈", "→", "⊆",
     "#","http","https","()",
-    "(",")"
+    "(",")","%",'1','2','3','4','5','6','7','8','9','0'
 ]
 
 def clean_prompt(prompt: str) -> str:
@@ -201,39 +201,33 @@ def genImgPrompts(story: str) -> list:
     parts = story.split("#")
     story_text = parts[0]
     style_guide = parts[1] if len(parts) > 1 else "Historical"
-
-    # subject = extract_subject(story_text)
-    subject = parts[2]
-
+    subject = parts[2] if len(parts) > 2 else "Unknown"
+    
     final_prompts = []
-
+    
     for sentence in story_text.split("."):
         sentence = sentence.strip()
         if not sentence:
             continue
-
-        prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide=style_guide)[0]
-        prompt = clean_prompt(prompt)
-
+        
         retries = 5  # Prevent infinite loops
-        while any(w in prompt for w in useless_words) or len(prompt.split()) < 10:
-            if retries == 0:
-                break
-            prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide="Biography")[0]
+        while retries > 0:
+            prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide=style_guide)[0]
             prompt = clean_prompt(prompt)
+            
+            # Check if prompt is valid
+            if not any(w in prompt for w in useless_words) and len(prompt.split()) >= 10:
+                break
             retries -= 1
-
+        
         # **Skip invalid prompts**
         if not prompt or "[image]" in prompt or "self." in prompt or "sentences =" in prompt:
             continue  
-
-        final_prompts.append(prompt)
-    
-    for f in final_prompts:
-        f = f"{subject}.{f}"
         
-    final_prompts = replace_pronouns_or_nouns(final_prompts,subject)
+        final_prompts.append(f"{subject}. {prompt}")
+    
+    final_prompts = replace_pronouns_or_nouns(final_prompts, subject)
     
     print(final_prompts)
-
+    
     return final_prompts

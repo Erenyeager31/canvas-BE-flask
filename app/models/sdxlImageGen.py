@@ -9,15 +9,16 @@ class ImageGenerator:
         """
         Initializes the image generation pipeline with a predefined model path.
         """
-        # model_path = "rupeshs/sdxl-turbo-openvino-int8"
-        # # model_path = "rupeshs/SDXL-Lightning-2steps-openvino-int8"
-        # self.pipeline = OVStableDiffusionXLPipeline.from_pretrained(
-        #     model_path,
-        #     ov_config={"CACHE_DIR": ""},
-        # )
+        model_path = "rupeshs/sdxl-turbo-openvino-int8"
+        # model_path = "rupeshs/SDXL-Lightning-2steps-openvino-int8"
+        self.pipeline = OVStableDiffusionXLPipeline.from_pretrained(
+            model_path,
+            ov_config={"CACHE_DIR": ""},
+        )
+        
         # model_path = "CompVis/stable-diffusion-v1-4"
         
-        model_path = "stabilityai/stable-diffusion-xl-base-1.0"
+        # model_path = "SimianLuo/LCM_Dreamshaper_v7"
         
         # # Load Stable Diffusion v1-4 using diffusers
         # self.pipeline = StableDiffusionPipeline.from_pretrained(model_path, torch_dtype=torch.float16)
@@ -28,7 +29,15 @@ class ImageGenerator:
         #     torch_dtype=torch.float16
         # ).to("cuda")
 
-        # Enable memory-efficient attention
+        # # Enable memory-efficient attention
+        # try:
+        #     self.pipeline.enable_xformers_memory_efficient_attention()
+        #     print("Successfully enabled xFormers memory-efficient attention")
+        # except Exception as e:
+        #     print(f"Warning: Could not enable xFormers: {e}")
+        #     print("Falling back to default attention mechanism")
+
+        # # Enable memory-efficient attention
         # try:
         #     self.pipeline.enable_xformers_memory_efficient_attention()
         #     print("Successfully enabled xFormers memory-efficient attention")

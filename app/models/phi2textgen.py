@@ -202,91 +202,6 @@ class Phi2Generator:
                 'generated_text': "Error occurred during text generation.",
                 'error': str(e)
             }
-
-    # def generate_concise_image_prompts(
-    #     self,
-    #     story: str,
-    #     style_guide: str = "cinematic, 8k",
-    #     max_words: int = 20,
-    #     temperature: float = 0.7
-    # ) -> List[str]:
-    #     """
-    #     Convert a story into concise image generation prompts.
-
-    #     Args:
-    #         model: The language model (Phi-2)
-    #         tokenizer: The model's tokenizer
-    #         story: Input story text
-    #         max_words: Maximum number of words per prompt
-    #         style_guide: Brief style specifications
-    #         temperature: Temperature for generation
-
-    #     Returns:
-    #         List of concise image generation prompts
-    #     """
-    #     try:
-    #         sentences = [s.strip() for s in story.split('.') if s.strip()]
-    #         image_prompts = []
-
-    #         # Shorter system prompt encouraging brevity
-    #         system_prompt = f"""Describe this sentence visually to a painter in detail
-    # Use max {max_words} words."""
-
-    #         for sentence in sentences:
-    #             input_prompt = f"""{system_prompt}
-
-    # Sentence: "{sentence}"
-
-    # Brief image prompt:"""
-
-    #             inputs = self.tokenizer(
-    #                 input_prompt,
-    #                 return_tensors="pt",
-    #                 truncation=True,
-    #                 padding=True
-    #             ).to(self.device)
-
-    #             # Set stricter length limits
-    #             # outputs = self.model.generate(
-    #             #     **inputs,
-    #             #     max_length=100,  # Reduced from previous version
-    #             #     min_length=20,   # Ensure some minimum content
-    #             #     temperature=temperature,
-    #             #     top_p=0.9,
-    #             #     top_k=50,
-    #             #     repetition_penalty=1.2,
-    #             #     do_sample=True,
-    #             #     num_return_sequences=1
-    #             # )
-
-    #             outputs = self.model.generate(
-    #                 **inputs,
-    #                 max_new_tokens=40,      # Reduced from 50 to help enforce word limit
-    #                 min_length=10,          # Reduced from 20 since image prompts can be concise
-    #                 temperature=0.5,        # Reduced from 0.7 for more focused outputs
-    #                 top_p=0.85,            # Slightly reduced for more conservative sampling
-    #                 top_k=40,              # Reduced from 50 to limit vocabulary diversity
-    #                 repetition_penalty=1.3, # Increased slightly to avoid repetitive phrases
-    #                 do_sample=True,
-    #                 num_return_sequences=1,
-    #                 no_repeat_ngram_size=2  # Added to prevent phrase repetition
-    #             )
-
-    #             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-    #             prompt = generated_text.split("Brief image prompt:")[-1].strip()
-
-    #             # Enforce word limit through post-processing
-    #             prompt = f"{prompt}, {style_guide}"
-                    
-    #             print(prompt)
-
-    #             image_prompts.append(prompt)
-
-    #         return image_prompts
-
-    #     except Exception as e:
-    #         print(f"Error generating image prompts: {str(e)}")
-    #         return []
     
     def generate_concise_image_prompts(
         self,
@@ -332,11 +247,16 @@ class Phi2Generator:
             # limit to {max_words} words. \n\n
             # """
 
-            system_prompt=f"""
-            Describe this sentence visually to a painter in a simple manner.
-            Focus on subject
-            Combine into single sentence in {max_words} words
-            """
+            # system_prompt = f"""Describe the sentence visually to a blind painter.
+            # Limit {max_words} words.
+            # Ensure the description is concrete, realistic, and stays true to the original meaning and try to over-exaggerate."""
+            
+            system_prompt = f"""You are an expert prompt engineer for AI image generation using PHI. 
+Transform the following text into a vivid, detailed, and visually rich prompt that can be directly used by an image generation model. 
+Include specific visual details such as setting, mood, lighting, style, and key objects. 
+If the original text suggests cultural or ethnic elements, preserve them naturally in the refined prompt without exaggeration.  
+Ensure the refined prompt is strictly between 20 and 30 words, and do not add any extra commentary."""
+
 
             for sentence in sentences:
                 input_prompt = f"""{system_prompt}
