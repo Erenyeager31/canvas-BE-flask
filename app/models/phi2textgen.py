@@ -204,65 +204,38 @@ class Phi2Generator:
             }
     
     def generate_concise_image_prompts(
-        self,
-        story: str,
-        style_guide: str = "cinematic, 8k",
-        max_words: int = 20,
-        temperature: float = 0.7
-    ) -> List[str]:
-        """
-        Convert a story into concise image generation prompts.
-
-        Args:
-            model: The language model (Phi-2)
-            tokenizer: The model's tokenizer
-            story: Input story text
-            max_words: Maximum number of words per prompt
-            style_guide: Brief style specifications
-            temperature: Temperature for generation
-
-        Returns:
-            List of concise image generation prompts
-        """
+          self,
+          story: str,
+          style_guide: str = "cinematic, 8k",
+          max_words: int = 20,
+          temperature: float = 0.7
+      ) -> List[str]:
         try:
             sentences = [s.strip() for s in story.split('.') if s.strip()]
             image_prompts = []
 
             style_map = {
-              "Historical": "vintage. antique. period.",
-              "Biography": "portrait. candid. iconic",
-              "Cinematic": "dramatic. scenic. cinematography"
+                "Historical": "vintage. antique. period.",
+                "Biography": "portrait. candid. iconic",
+                "Cinematic": "dramatic. scenic. cinematography"
             }
+            # Retrieve style details or default to "Cinematic"
+            style_guide = style_map.get(style_guide, "Cinematic")
 
-            style_guide = style_map.get(style_guide,"Cinematic")
-
-            # Shorter system prompt encouraging brevity
-    #         system_prompt = f"""Convert the sentence into a brief, vivid image prompt. Focus on the subject present in the Sentence.
-    # determine the subject and landscape and use it construct the prompt
-    # Use max {max_words} words.
-    # Focus on key visual elements only.
-    # End with: {style_guide}"""
-            # system_prompt = f"""Try to visually describe the sentence to a painter in detail.
-            # Stick to the
-            # limit to {max_words} words. \n\n
-            # """
-
-            # system_prompt = f"""Describe the sentence visually to a blind painter.
-            # Limit {max_words} words.
-            # Ensure the description is concrete, realistic, and stays true to the original meaning and try to over-exaggerate."""
-            
-            system_prompt = f"""You are an expert prompt engineer for AI image generation using PHI. 
-Transform the following text into a vivid, detailed, and visually rich prompt that can be directly used by an image generation model. 
-Include specific visual details such as setting, mood, lighting, style, and key objects. 
-If the original text suggests cultural or ethnic elements, preserve them naturally in the refined prompt without exaggeration.  
+            # Modified system prompt that includes the complete story context.
+            system_prompt = f"""You are an expert prompt engineer for AI image generation using PHI.
+Using the complete story context provided, transform the following sentence into a vivid, detailed, and visually rich prompt that can be directly used by an image generation model.
+Incorporate any relevant character names, cultural or ethnic details, and context from the full story.
+Include specific visual details such as setting, mood, lighting, style, and key objects.
+**Important:** Retain all specific details, including proper names and key objects, exactly as mentioned in the sentence and context. Do not substitute these details with names or items from other contexts.
 Ensure the refined prompt is strictly between 20 and 30 words, and do not add any extra commentary."""
-
 
             for sentence in sentences:
                 input_prompt = f"""{system_prompt}
-                Sentence: "{sentence}"
-                \n\n
-                Brief image prompt:"""
+    Complete Story Context: "{story}"
+    Sentence: "{sentence}"
+
+    Brief image prompt:"""
 
                 inputs = self.tokenizer(
                     input_prompt,
@@ -271,28 +244,24 @@ Ensure the refined prompt is strictly between 20 and 30 words, and do not add an
                     padding=True
                 ).to(self.device)
 
-                # Set stricter length limits
                 outputs = self.model.generate(
                     **inputs,
-                    max_new_tokens=50,      #
-                    min_length=10,         
-                    temperature=0.7,       
-                    top_p=0.85,           
-                    top_k=40,             
+                    max_new_tokens=50,
+                    min_length=10,
+                    temperature=temperature,
+                    top_p=0.85,
+                    top_k=40,
                     repetition_penalty=1.3,
                     do_sample=True,
                     num_return_sequences=1,
-                    no_repeat_ngram_size=2 
+                    no_repeat_ngram_size=2
                 )
 
                 generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                 prompt = generated_text.split("Brief image prompt:")[-1].strip()
 
-                # Enforce word limit through post-processing
+                # Append the chosen style guide to the prompt
                 prompt = f"{prompt}, {style_guide}"
-
-                # print(prompt)
-
                 image_prompts.append(prompt)
 
             return image_prompts

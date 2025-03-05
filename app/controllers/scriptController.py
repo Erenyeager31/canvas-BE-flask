@@ -3,6 +3,7 @@ from app.controllers.vectorDBcontroller import retriveContext, retriveUserContex
 from app.utils.cloudinaryDeleteFiles import delete_files_from_cloudinary
 from app.utils.subjectExtractor import extract_subject
 from app.utils.subjectReplacer import replace_pronouns_or_nouns
+from app.utils.uselessWords import useless_words
 
 # Simplified style guides
 STYLE_GUIDES = {
@@ -11,37 +12,6 @@ STYLE_GUIDES = {
     'historical': "historical, detailed",
     'artistic': "digital art, stylized"
 }
-
-useless_words = [
-    "Solution", "solution",
-    "Answer", "answer",
-    "Response", "response",
-    "Explanation", "explanation",
-    "Statement", "statement",
-    "Query", "query",
-    "Clarification", "clarification",
-    "Insight", "insight",
-    "Task", "task",
-    "Objective", "objective",
-    "Challenge", "challenge",
-    "Instruction", "instruction",
-    "Process", "process",
-    "Steps", "steps",
-    "Guidelines", "guidelines",
-    "Compute", "compute",
-    "Algorithm", "algorithm",
-    "Execution", "execution",
-    "Function", "function",
-    "Output", "output",
-    "Variable", "variable",
-    "Parameter", "parameter",
-    "*", "#", "-", "_", ">", "\\n", "\\t",
-    "{", "}", "[", "]", "(", ")",
-    "=>", "::", "\"\"\"",
-    "Σ", "∫", "≈", "→", "⊆",
-    "#","http","https","()",
-    "(",")","%",'1','2','3','4','5','6','7','8','9','0'
-]
 
 def clean_prompt(prompt: str) -> str:
     """Removes unwanted characters and patterns from the prompt."""
@@ -54,22 +24,6 @@ def clean_prompt(prompt: str) -> str:
 
     return prompt.strip()
 
-# def genNewScript(body:dict)->dict:
-#     topic = body['topic']
-#     ScriptGenModel = current_app.config['ScriptGenModel']
-    
-#     context = retriveContext(topic)
-    
-#     # print("Topic:",topic,"Context:",context)
-
-#     result = ScriptGenModel.generate_with_custom_instructions(
-#                 context=context,
-#                 query=topic,
-#                 # words_per_sentence=words_per_sentence
-#             )
-    
-#     print(result)
-#     return result
 def genNewScript(body: dict,userDocURL) -> dict:
     topic = body['topic']
 
@@ -112,96 +66,13 @@ def genNewScript(body: dict,userDocURL) -> dict:
     print(result)
     return result
 
-# def genImgPrompts(story:str)->list:
-#     ScriptGenModel = current_app.config['ScriptGenModel']
-#     # returns a list
-#     style_guide = story.split("#")[1]
-#     story = story.split("#")[0]
-
-#     subject = extract_subject(story)
-
-#     prompts = ScriptGenModel.generate_concise_image_prompts(
-#                 story=story,
-#                 # subject=subject,
-#                 style_guide=style_guide
-#             )
-    
-#     final_prompt = []
-    
-#     for text in story.split("."):
-#         if not text.strip(): continue
-
-#         prompts = ScriptGenModel.generate_concise_image_prompts(
-#                 story=text+".",
-#                 # subject=subject,
-#                 style_guide=style_guide
-#             )
-
-#         prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
-#         prompt = prompt.replace("'","")
-#         prompt = prompt.replace('`',"")
-#         prompt.replace("\n","")
-
-#         pos = prompt.find("```")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         pos = prompt.find("-")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         pos = prompt.find("*")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         pos = prompt.find("_")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         pos = prompt.find("import")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         pos = prompt.find("def")
-#         prompt = prompt[:pos] if pos != -1 else prompt
-
-#         print("Obtained prompt :",prompt,"\n\n")
-#         useless_list = [w for w in useless_words if w in prompt]
-#         while len(useless_list) != 0 or len(prompt.split(" ")) < 10:
-#             prompt = ScriptGenModel.generate_concise_image_prompts(text+".",style_guide="Biography")[0].replace('"',"")
-#             prompt = prompt.replace("'","")
-#             prompt = prompt.replace('`',"")
-#             prompt.replace("\n","")
-
-#             pos = prompt.find("```")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             pos = prompt.find("-")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             pos = prompt.find("*")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             pos = prompt.find("_")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             pos = prompt.find("import")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             pos = prompt.find("def")
-#             prompt = prompt[:pos] if pos != -1 else prompt
-
-#             print("Obtained prompt :",prompt,"\n\n")  
-#             # print(prompt,"\n\n")
-#             useless_list = [w for w in useless_words if w in prompt]
-#             final_prompt.append(prompt)
-    
-#     # replacing with subject
-#     prompts = replace_pronouns_or_nouns(final_prompt,subject)
-
-#     return prompts
 def genImgPrompts(story: str) -> list:
     ScriptGenModel = current_app.config['ScriptGenModel']
     
     parts = story.split("#")
     story_text = parts[0]
     style_guide = parts[1] if len(parts) > 1 else "Historical"
-    subject = parts[2] if len(parts) > 2 else "Unknown"
+    subject = parts[2] if len(parts) > 2 else ""
     
     final_prompts = []
     
@@ -216,7 +87,7 @@ def genImgPrompts(story: str) -> list:
             prompt = clean_prompt(prompt)
             
             # Check if prompt is valid
-            if not any(w in prompt for w in useless_words) and len(prompt.split()) >= 10:
+            if not any(w in prompt for w in useless_words) and len(prompt.split()) >= 15:
                 break
             retries -= 1
         
