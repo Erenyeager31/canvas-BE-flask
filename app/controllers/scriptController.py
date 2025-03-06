@@ -51,10 +51,13 @@ def genNewScript(body: dict,userDocURL) -> dict:
         style_guide=style_guide
     )
     useless_list = [w for w in useless_words if w in result['generated_text']]
+    
+    tries = 5
 
-    while len(result['generated_text'].split(".")) < 5 or len(useless_list) != 0:
+    while len(result['generated_text'].split(".")) < 5 or len(useless_list) != 0 and tries > 0:
         result = ScriptGenModel.generate_with_custom_instructions(context=context,query=topic,style_guide=style_guide)
         useless_list = [w for w in useless_words if w in result['generated_text']]
+        tries -= 1
     
     if 'generated_text' in result:
         # Clean the generated text
@@ -77,11 +80,12 @@ def genImgPrompts(story: str) -> list:
     final_prompts = []
     
     for sentence in story_text.split("."):
+        print("sentence :",sentence)
         sentence = sentence.strip()
         if not sentence:
             continue
         
-        retries = 5  # Prevent infinite loops
+        retries = 10  # Prevent infinite loops
         while retries > 0:
             prompt = ScriptGenModel.generate_concise_image_prompts(sentence + ".", style_guide=style_guide)[0]
             prompt = clean_prompt(prompt)
@@ -92,10 +96,12 @@ def genImgPrompts(story: str) -> list:
             retries -= 1
         
         # **Skip invalid prompts**
-        if not prompt or "[image]" in prompt or "self." in prompt or "sentences =" in prompt:
-            continue  
+        # if not prompt or "[image]" in prompt or "self." in prompt or "sentences =" in prompt:
+        #     continue  
         
-        final_prompts.append(f"{subject}. {prompt}")
+        final_prompts.append(prompt)
+        
+        print("prompt :",prompt)
     
     final_prompts = replace_pronouns_or_nouns(final_prompts, subject)
     

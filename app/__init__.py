@@ -14,7 +14,7 @@ def create_app():
     app.config['ScriptGenModel'] = Phi2Generator()
     app.config['ImageGenModel'] = ImageGenerator()
     app.config['contextModel'] = ContextRetriever()
-    # app.config['TTSModel'] = HuggingFaceTTS()
+    app.config['TTSModel'] = HuggingFaceTTS()
     # app.config['TTSModel'] = HuggingFaceTTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
     app.config['DB'] = DBInstance()
 

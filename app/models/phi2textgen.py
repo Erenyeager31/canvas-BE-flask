@@ -105,14 +105,21 @@ class Phi2Generator:
             sentence_instruction = (f"\nImportant: Write in a clear narrative style using approximately {words_per_sentence} words per sentence. Your response MUST be between 100-150 words total. Do not exceed 150 words." 
             if words_per_sentence else 
                 "\nImportant: Write in a clear narrative style. Your response MUST be between 100-150 words total. Do not exceed 150 words.")
-            base_prompt = """Based on this context:
-            {context}
+            # base_prompt = """Based on this context:
+            # {context}
 
-            {style_instruction} {query}{instruction}
+            # {style_instruction} {query}{instruction}
             
-            Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
-            Count your total words carefully before submitting. If your narrative exceeds 150 words, revise it to fit within the 100-150 word limit while preserving the most important information.
-            Narrative:"""
+            # Focus on creating a flowing story with clear progression and connections between ideas. Each sentence should naturally lead to the next, maintaining narrative coherence while being concise and informative.
+            # Count your total words carefully before submitting. If your narrative exceeds 150 words, revise it to fit within the 100-150 word limit while preserving the most important information.
+            # Narrative:"""
+            base_prompt = """Based on the following context:
+{context}
+
+{style_instruction} {query}{instruction}
+
+As an expert, your task is to craft a precise, factually accurate narrative using only the provided context. Ensure your narrative reflects deep subject matter expertise and avoids any unverified details. Create a flowing story with clear progression between ideas, where each sentence naturally leads to the next while remaining concise and informative. Maintain a tone of authority and factual precision throughout. Count your total words carefully before submitting; if your narrative exceeds 150 words, revise it to fit within the 100-150 word limit while preserving the most essential information.
+Narrative:"""
             
             # Rest of the function remains the same...
             context_tokens = self.tokenizer.encode(
